@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../include/sqlite3.h"
 
 /* Pour vérifier les erreurs d'alloc */
@@ -10,7 +11,8 @@ int err_alloc(void *p){
     }
     return 0;
 }
-    
+
+/* Pour copier une reqûete à partir d'un fichier dans un buffer */ 
 char *lit_requete(FILE * fichier_requete){
     int taille;
     char *req;
@@ -35,45 +37,64 @@ int main(){
     int res;
     char *err = NULL;
     FILE * f;
-    char *requete; /* Un buffer pour stocker une requete sql */
-
+    char *requetetxt; /* Un buffer pour stocker une requete sql */
+    sqlite3_stmt *ppreq;
+    const char *lecture;
+    int res_requete; 
 
     /* Ouverture de la BDD */
-    res = sqlite3_open("data/santadata.db", &db);
+    res = sqlite3_open_v2("data/santadata.db", &db, SQLITE_OPEN_READWRITE, NULL); /* ouverture */
 
-    if (res != SQLITE_OK){
+    if (res != SQLITE_OK){ /* cas d'erreur */
         fprintf(stderr, "Impossible d'accéder aux données.\n");
         sqlite3_close(db);
 
         exit(EXIT_FAILURE);
     }
 
-    /* Lecture de la requete */
-    f = fopen("data/reqtest.sql", "r");
-    if (f == NULL){
+    /* Lecture de la requete depuis un fichier */
+    f = fopen("data/reqtest.sql", "r"); /* ouverture du fichier */
+    if (f == NULL){ /* cas d'erreur */
         fprintf(stderr, "Erreur lecture requete\n");
         exit(EXIT_FAILURE);
     }
-    requete = lit_requete(f);
-    printf("requete =\n %s\n", requete);
+    requetetxt = lit_requete(f); /* copie du fichier dans la chaine */
+    printf("requete =\n %s\n", requetetxt); /* affichage de verif */
 
-    
-
-    /* Execution de la requete */
-    res = sqlite3_exec(db, requete, 0, 0, &err);
-
-    if (res != SQLITE_OK){
-        fprintf(stderr, "Erreur SQLite: %s\n", err);
-        sqlite3_free(err);
+    /* Compilation de la requete */
+    res = sqlite3_prepare_v2(db, requetetxt, strlen(requetetxt) + 1, &ppreq, &lecture);
+    if (res != SQLITE_OK){ /* cas d'erreur */
+        fprintf(stderr, "Erreur à la compilation de la requête\n");
         sqlite3_close(db);
 
         exit(EXIT_FAILURE);
     }
     
-    fclose(f);
-    free(requete);
-    requete = NULL;
-    sqlite3_close(db);
 
+    /* Execution de la requete */
+    res = sqlite3_step(ppreq);
+
+    while (res != SQLITE_DONE){ /* On continue l'éxécution de la requete jusqu'à sa fin */
+        /* Si résultat obtenu */
+        if (res == SQLITE_ROW){
+            res_requete = sqlite3_column_int(ppreq, 0);
+            printf("Résultat de la requête : %d\n", res_requete);
+        }
+        
+        res = sqlite3_step(ppreq);
+         
+    }
+    /* Si résultat obtenu */
+    if (res == SQLITE_ROW){
+        res_requete = sqlite3_column_int(ppreq, 1);
+        printf("Résultat de la requête : %d\n", res_requete);
+    }
+
+    
+    fclose(f);
+    free(requetetxt);
+    requetetxt = NULL;
+    sqlite3_close(db);
+    printf("Succès, fermeture de la BDD.\n");
     exit(EXIT_SUCCESS);
 }
