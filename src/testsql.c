@@ -40,7 +40,7 @@ int main(){
     char *requetetxt; /* Un buffer pour stocker une requete sql */
     sqlite3_stmt *ppreq;
     const char *lecture;
-    int res_requete; 
+    int res_requete, i, nb_res;
 
     /* Ouverture de la BDD */
     res = sqlite3_open_v2("data/santadata.db", &db, SQLITE_OPEN_READWRITE, NULL); /* ouverture */
@@ -86,8 +86,11 @@ int main(){
     }
     /* Si résultat obtenu */
     if (res == SQLITE_ROW){
-        res_requete = sqlite3_column_int(ppreq, 1);
-        printf("Résultat de la requête : %d\n", res_requete);
+        nb_res = sqlite3_column_count(ppreq);
+        for (i = 0 ; i < nb_res; i++){
+            res_requete = sqlite3_column_int(ppreq, 0);
+            printf("Résultat de la requête : %d\n", res_requete);
+        }
     }
 
     
