@@ -3,6 +3,11 @@
 #include <string.h>
 #include "../include/sqlite3.h"
 
+typedef union res_requete{
+    int * int_resultat;
+    char * str_resultat;
+}res_requete;
+
 /* Pour vérifier les erreurs d'alloc */
 int err_alloc(void *p){
     if (p == NULL){
@@ -40,7 +45,8 @@ int main(){
     char *requetetxt; /* Un buffer pour stocker une requete sql */
     sqlite3_stmt *ppreq;
     const char *lecture;
-    int res_requete, i, nb_res;
+    int i, nb_res;
+    res_requete resultat;
 
     /* Ouverture de la BDD */
     res = sqlite3_open_v2("data/santadata.db", &db, SQLITE_OPEN_READWRITE, NULL); /* ouverture */
@@ -59,7 +65,6 @@ int main(){
         exit(EXIT_FAILURE);
     }
     requetetxt = lit_requete(f); /* copie du fichier dans la chaine */
-    printf("requete =\n %s\n", requetetxt); /* affichage de verif */
 
     /* Compilation de la requete */
     res = sqlite3_prepare_v2(db, requetetxt, strlen(requetetxt) + 1, &ppreq, &lecture);
@@ -77,22 +82,13 @@ int main(){
     while (res != SQLITE_DONE){ /* On continue l'éxécution de la requete jusqu'à sa fin */
         /* Si résultat obtenu */
         if (res == SQLITE_ROW){
-            res_requete = sqlite3_column_int(ppreq, 0);
-            printf("Résultat de la requête : %d\n", res_requete);
+            resultat.str_resultat = (char *) sqlite3_column_text(ppreq, 0); /* PAS PROPRE JE PENSE, A MODIFIER (recopie ?) */
+            printf("Résultat de la requête : %s\n", resultat.str_resultat);
         }
         
         res = sqlite3_step(ppreq);
          
     }
-    /* Si résultat obtenu */
-    if (res == SQLITE_ROW){
-        nb_res = sqlite3_column_count(ppreq);
-        for (i = 0 ; i < nb_res; i++){
-            res_requete = sqlite3_column_int(ppreq, 0);
-            printf("Résultat de la requête : %d\n", res_requete);
-        }
-    }
-
     
     fclose(f);
     free(requetetxt);
