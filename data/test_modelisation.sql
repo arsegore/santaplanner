@@ -102,12 +102,12 @@ INSERT INTO disponibilite (id_lutin, nom_jour, id_semaine, id_creneau) VALUES
 (1, 'Lundi', 1, 1),
 (2, 'Mardi', 2, 2),
 (3, 'Mercredi', 3, 3);
-
+*/
 INSERT INTO travaille (id_lutin, id_ligne, id_semaine, nom_jour, id_creneau) VALUES
 (1, 1, 1, 'Lundi', 1),
 (2, 2, 2, 'Mardi', 2),
 (3, 3, 3, 'Mercredi', 3);
-*/
+
 
 SELECT * FROM travaille;
 
