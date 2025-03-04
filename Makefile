@@ -1,7 +1,9 @@
 CC=gcc
 CFLAGS=-W -Wall
 
-all: santaplanner main.o requete.o sqlite3.o
+all: sqlite3.o requete.o main.o santaplanner
+
+all_but_sqlite: requete.o main.o santaplanner
 
 santaplanner:
 	gcc build/main.o build/requete.o build/sqlite3.o -o build/santaplanner
