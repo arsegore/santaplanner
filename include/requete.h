@@ -5,12 +5,21 @@
 #include <stdio.h>
 
 typedef struct {
-  int type; /* 0 pour int, 1 pour chaine, ... */
+  int type; /* 0 : chaine, 1 : int, 2 : float */
   union {
     int res_int;
+    float res_float;
     char res_chaine[50];
   };
-}resultat_requete;
+}requete_valeur;
+
+typedef struct {
+  requete_valeur ** valeurs;
+  int nb_ligne, nb_col;
+}table_resultat;
+
+/* Vérifie si une allocation s'est bien passée */
+int err_alloc(void *p);
 
 /*
  * Récupère la date & heure.
@@ -39,22 +48,18 @@ int ouvrir_bdd(const char *chemin, sqlite3 **db, FILE *logs);
  */
 int fermer_bdd(sqlite3 *db, FILE *logs);
 
-/*
- * Compilation d'une requete SQL.
- * db : l'objet bdd sur lequel travailler
- * requete_txt : le code de la requete
- * rq : pointeur vers un "objet" requete
- * logs : le fichier de logs
- */
+/**/
 int compiler_requete(sqlite3 *db, char *requete_txt, sqlite3_stmt **rq, const char **lecture, FILE *logs);
 
 /*
- * Execution d'une requete SQL
- * rq : la requete compilée à executer
- * logs : le fichier de logs
+ * Execute une requete, stocke son résultat dans une
+ * table de résultats, l'affiche et la libère.
+ * rq : la requete compilée à éxécuter
+ * logs : fichier où sont écrits les logs
  */
-int executer_requete(sqlite3_stmt *rq, FILE *logs);
+int executer_afficher_requete(sqlite3_stmt *rq, FILE *logs);
 
+char *charger_requete(FILE * fichier_requete);
 
 
 #endif // REQUETE_H_
