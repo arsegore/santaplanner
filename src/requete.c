@@ -124,12 +124,12 @@ table_resultat *remplir_table_res(sqlite3_stmt *rq, FILE *logs){
 
   for(j = 0;  sqlite3_step(rq) != SQLITE_DONE; j++ ){
     res = ajoute_ligne(res);
-    for (i = 0; i < nb_col; i++){
 
+    for (i = 0; i < nb_col; i++){
       switch(sqlite3_column_type(rq, i)){
       case (SQLITE3_TEXT):
         res->valeurs[res->nb_ligne-1][i].type = 0;
-        strncpy(res->valeurs[res->nb_ligne-1][i].res_chaine, (const char*) sqlite3_column_text(rq, i), 100);
+        strncpy(res->valeurs[res->nb_ligne-1][i].res_chaine, (const char*) sqlite3_column_text(rq, i), strlen( (const char *) sqlite3_column_text(rq, i)));
         break;
       case (SQLITE_INTEGER):
         res->valeurs[res->nb_ligne-1][i].type = 1;
@@ -157,16 +157,17 @@ void afficher_resultats(table_resultat *t){
   int i,j;
 
   for (i = 0; i < t->nb_ligne; i++){
+    printf("+-----------------------------------------------------------+\n");
     for (j = 0; j < t->nb_col; j++){
       switch(t->valeurs[i][j].type){
       case 0:
-        printf("%s / ", t->valeurs[i][j].res_chaine);
+        printf(" %s |", t->valeurs[i][j].res_chaine);
         break;
       case 1:
-        printf("%d / ", t->valeurs[i][j].res_int);
+        printf(" %d |", t->valeurs[i][j].res_int);
         break;
       case 2:
-        printf("%f / ", t->valeurs[i][j].res_float);
+        printf(" %f |", t->valeurs[i][j].res_float);
         break;
       default:
         break;
@@ -174,6 +175,9 @@ void afficher_resultats(table_resultat *t){
     }
     printf("\n");
   }
+
+  printf("+-----------------------------------------------------------+\n\n\n");
+  return;
 }
 
 int executer_afficher_requete(sqlite3_stmt *rq, FILE *logs){
@@ -206,4 +210,10 @@ char *charger_requete(FILE * fichier_requete){
     fread(req, sizeof(char), taille, fichier_requete);
 
     return req;
+}
+
+void inserer_id(sqlite3_stmt *rq, int id){
+  sqlite3_bind_int(rq, 1, id);
+
+  return;
 }
