@@ -6,5 +6,5 @@ JOIN lutin ON disponibilite.id_lutin = lutin.id
 JOIN jour ON disponibilite.id_jour = jour.id
 JOIN creneau ON disponibilite.id_creneau = creneau.id
 WHERE travaille.id_ligne = ?1
-ORDER BY jour.id
+ORDER BY semaine.id, jour.id, creneau.id
 ;

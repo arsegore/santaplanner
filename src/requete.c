@@ -128,16 +128,13 @@ table_resultat *remplir_table_res(sqlite3_stmt *rq, FILE *logs){
     for (i = 0; i < nb_col; i++){
       switch(sqlite3_column_type(rq, i)){
       case (SQLITE3_TEXT):
-        res->valeurs[res->nb_ligne-1][i].type = 0;
-        strncpy(res->valeurs[res->nb_ligne-1][i].res_chaine, (const char*) sqlite3_column_text(rq, i), strlen( (const char *) sqlite3_column_text(rq, i)));
+        strncpy(res->valeurs[res->nb_ligne-1][i], (const char*) sqlite3_column_text(rq, i), strlen( (const char *) sqlite3_column_text(rq, i))+1);
         break;
       case (SQLITE_INTEGER):
-        res->valeurs[res->nb_ligne-1][i].type = 1;
-        res->valeurs[res->nb_ligne-1][i].res_int = sqlite3_column_int(rq, i);
+        snprintf(res->valeurs[res->nb_ligne-1][i], 50, "%d",sqlite3_column_int(rq, i));
         break;
       case (SQLITE_FLOAT):
-        res->valeurs[res->nb_ligne-1][i].type = 2;
-        res->valeurs[res->nb_ligne-1][i].res_int = sqlite3_column_double(rq, i);
+        snprintf(res->valeurs[res->nb_ligne-1][i], 50, "%f",sqlite3_column_double(rq, i));
         break;
       default:
         break;
@@ -153,25 +150,26 @@ table_resultat *remplir_table_res(sqlite3_stmt *rq, FILE *logs){
 
 }
 
+void combler_espace(int longueur){
+  int i;
+
+  if (longueur < 11){
+    for (i = 0; i < 11 - longueur; i++){
+      printf(" ");
+    }
+  }
+  return;
+}
+
 void afficher_resultats(table_resultat *t){
   int i,j;
 
   for (i = 0; i < t->nb_ligne; i++){
     printf("+-----------------------------------------------------------+\n");
+    printf("|");
     for (j = 0; j < t->nb_col; j++){
-      switch(t->valeurs[i][j].type){
-      case 0:
-        printf(" %s |", t->valeurs[i][j].res_chaine);
-        break;
-      case 1:
-        printf(" %d |", t->valeurs[i][j].res_int);
-        break;
-      case 2:
-        printf(" %f |", t->valeurs[i][j].res_float);
-        break;
-      default:
-        break;
-      }
+      combler_espace(strlen(t->valeurs[i][j]) + 2);
+      printf(" %s |", t->valeurs[i][j]);
     }
     printf("\n");
   }
