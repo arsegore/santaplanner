@@ -4,14 +4,7 @@
 #include "../include/sqlite3.h"
 #include <stdio.h>
 
-typedef struct {
-  int type; /* 0 : chaine, 1 : int, 2 : float */
-  union {
-    int res_int;
-    float res_float;
-    char res_chaine[50];
-  };
-}requete_valeur;
+typedef char requete_valeur[50];
 
 typedef struct {
   requete_valeur ** valeurs;

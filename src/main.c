@@ -8,9 +8,9 @@
 
 
 int main(){
-
-  while (1 == 1){
-    menu_principal();
+  int statut = 1;
+  while (statut == 1){
+   statut = menu_principal();
   }
   exit(EXIT_SUCCESS);
 
