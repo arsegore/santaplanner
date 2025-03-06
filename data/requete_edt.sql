@@ -5,4 +5,6 @@ JOIN semaine ON disponibilite.id_semaine = semaine.id
 JOIN lutin ON disponibilite.id_lutin = lutin.id
 JOIN jour ON disponibilite.nom_jour = jour.nom
 JOIN creneau ON disponibilite.id_creneau = creneau.id
+WHERE lutin.id = 3
+ORDER BY creneau.id
 ;

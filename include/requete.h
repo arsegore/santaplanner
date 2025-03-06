@@ -61,5 +61,7 @@ int executer_afficher_requete(sqlite3_stmt *rq, FILE *logs);
 
 char *charger_requete(FILE * fichier_requete);
 
+void inserer_id(sqlite3_stmt *rq, int id);
+
 
 #endif // REQUETE_H_
