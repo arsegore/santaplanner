@@ -9,9 +9,19 @@
 
 int main(){
   int statut = 1;
-  while (statut == 1){
-   statut = menu_principal();
-  }
-  exit(EXIT_SUCCESS);
+  sqlite3 *db = NULL;
+  FILE *logs;;
 
+  logs = fopen("logs", "a+");
+  if (logs == NULL) fprintf(stderr, "impossible d'accéder aux logs.\n");
+  ouvrir_bdd("data/santadata2.db", &db, logs);
+
+  while (statut == 1){
+   statut = menu_principal(db, logs);
+
+  }
+
+  fermer_bdd(db, logs);
+  fclose(logs);
+  exit(EXIT_SUCCESS);
 }

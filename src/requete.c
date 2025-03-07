@@ -97,7 +97,7 @@ table_resultat *ajoute_ligne(table_resultat *t){
   return t;
 }
 
-void liberer_resultat(table_resultat *t){
+void liberer_resultats(table_resultat *t){
   int i;
 
   for(i = 0; i < t->nb_ligne; i++){
@@ -108,7 +108,7 @@ void liberer_resultat(table_resultat *t){
   free(t);
 }
 
-table_resultat *remplir_table_res(sqlite3_stmt *rq, FILE *logs){
+table_resultat *executer_requete(sqlite3_stmt *rq, FILE *logs){
   int nb_col, i, j;
   table_resultat *res;
 
@@ -144,17 +144,17 @@ table_resultat *remplir_table_res(sqlite3_stmt *rq, FILE *logs){
   }
 
   ajoute_log(logs, "Requete éxécutée avec succès.\n");
-  ajoute_log(logs, "Résultats enregistrée dans une table.\n");
+  ajoute_log(logs, "Résultats enregistrés dans une table.\n");
   sqlite3_finalize(rq);
   return res;
 
 }
 
-void combler_espace(int longueur){
+void combler_espace(int longueur, int max){
   int i;
 
-  if (longueur < 11){
-    for (i = 0; i < 11 - longueur; i++){
+  if (longueur < max){
+    for (i = 0; i < max - longueur; i++){
       printf(" ");
     }
   }
@@ -168,7 +168,7 @@ void afficher_resultats(table_resultat *t){
     printf("+-----------------------------------------------------------+\n");
     printf("|");
     for (j = 0; j < t->nb_col; j++){
-      combler_espace(strlen(t->valeurs[i][j]) + 2);
+      combler_espace(strlen(t->valeurs[i][j]) + 2, 57 / t->nb_col);
       printf(" %s |", t->valeurs[i][j]);
     }
     printf("\n");
@@ -177,19 +177,6 @@ void afficher_resultats(table_resultat *t){
   printf("+-----------------------------------------------------------+\n\n\n");
   return;
 }
-
-int executer_afficher_requete(sqlite3_stmt *rq, FILE *logs){
-  table_resultat *t;
-
-  t = remplir_table_res(rq, logs);
-  if (err_alloc(t)) return 0;
-  ajoute_log(logs, "Affichage des résultats\n");
-  afficher_resultats(t);
-  liberer_resultat(t);
-
-  return 1;
-}
-
 
 char *charger_requete(FILE * fichier_requete){
     int taille;
@@ -214,4 +201,117 @@ void inserer_id(sqlite3_stmt *rq, int id){
   sqlite3_bind_int(rq, 1, id);
 
   return;
+}
+
+void afficher_lutins(sqlite3 *db, FILE *logs){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/afficher_lutins.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  t = executer_requete(rq, logs);
+  printf("+-----------------------------------------------------------+\n");
+  printf("| Nom               | Numéro            | Spécialité        |\n");
+  afficher_resultats(t);
+  liberer_resultats(t);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+}
+
+
+table_resultat * requete_edt_ligne(sqlite3 *db, FILE *logs, int id){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/edt_ligne.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  inserer_id(rq, id);
+  t = executer_requete(rq, logs);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+
+  return t;
+}
+
+table_resultat *requete_edt_lutin(sqlite3 *db, FILE *logs, int id){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/edt_lutin.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  inserer_id(rq, id);
+  t = executer_requete(rq, logs);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+
+  return t;
+}
+
+table_resultat *requete_inscrire_lutin(sqlite3 *db, FILE *logs, char *nom, char *specialite){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/inscrire_lutin.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_text(rq, 1, nom, -1, NULL);
+  sqlite3_bind_text(rq, 2, specialite, -1, NULL);
+
+  t = executer_requete(rq, logs);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+
+  return t;
+}
+
+table_resultat *requete_inscrire_absence(sqlite3 *db, FILE *logs, int id_lutin, int id_jour, int id_semaine, int id_creneau){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/inscrire_absence.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_lutin);
+  sqlite3_bind_int(rq, 2, id_jour);
+  sqlite3_bind_int(rq, 3, id_semaine);
+  sqlite3_bind_int(rq, 4, id_creneau);
+
+  t = executer_requete(rq, logs);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+
+  return t;
 }
