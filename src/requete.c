@@ -65,7 +65,7 @@ int compiler_requete(sqlite3 *db, char *requete_txt, sqlite3_stmt **rq, const ch
 }
 
 table_resultat *creer_table_res(int nb_col){
-  table_resultat *res;
+  table_resultat *res = NULL;
 
   /* Allocation de la memoire pr la struct table */
   res = (table_resultat *) malloc (sizeof(table_resultat));

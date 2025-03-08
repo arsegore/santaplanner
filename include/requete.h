@@ -4,7 +4,7 @@
 #include "../include/sqlite3.h"
 #include <stdio.h>
 
-typedef char requete_valeur[50];
+typedef char requete_valeur[100];
 
 typedef struct {
   requete_valeur ** valeurs;
