@@ -4,15 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/*!
- * \brief Récupère l'id d'une semaine donnée dans la base de données
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- * \param num_semaine Le numéro de la semaine dans l'année
- * \mois Le numéro du mois
- * \annee L'année
-*/
 int semaine2id(sqlite3 *db, FILE *logs, int num_semaine, int mois, int annee){
   FILE *fichier_rq;
   char *requete_txt;
@@ -40,16 +31,6 @@ int semaine2id(sqlite3 *db, FILE *logs, int num_semaine, int mois, int annee){
   return res;
 }
 
-
-/*!
- * \brief Renvoie le nombre de lignes ouvrables à un instant donné
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- * \param id_semaine L'identifiant d'une semaine dans la base de données
- * \param id_jour L'identifiant d'un jour dans la base de données (qui correspond en fait au numéro d'un jour dans la semaine)
- * \param id_creneau L'identifiant d'un créneau dans la base de données
-*/
 int nb_lignes_ouvrables(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_creneau){
   int res;
   FILE *fichier_rq;
@@ -75,20 +56,6 @@ int nb_lignes_ouvrables(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, in
   return res / 3;
 }
 
-/*!
- * \brief Ouvre une ligne à un instant donné
- *
- * Pour un certain horaire, on récupère l'ensemble des lutins disponibles ordonnés
- * aléatoirement. On insère une nouvelle entrée dans la table travaille pour 3 des lutins
- * disponibles à l'horaire donné sur la ligne choisie.
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- * \param id_semaine L'identifiant d'une semaine dans la base de données
- * \param id_jour L'identifiant d'un jour dans la base de données (qui correspond en fait au numéro d'un jour dans la semaine)
- * \param id_creneau L'identifiant d'un créneau dans la base de données
- * \param id_ligne La ligne à ouvrir
-*/
 void ouvrir_ligne(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_creneau, int id_ligne){
   table_resultat *lutins_dispo, *t;
   FILE *fichier_rq;
@@ -129,18 +96,6 @@ void ouvrir_ligne(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_c
   return;
 }
 
-/*!
- * \brief Renvoie aléatoirement l'une des lignes libres à un horaire donné
- *
- * Récupère l'ensemble des lignes libres à un horaire donné, les ordonne aléatoirement
- * et n'en renvoie qu'un
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- * \param id_semaine L'identifiant d'une semaine dans la base de données
- * \param id_jour L'identifiant d'un jour dans la base de données (qui correspond en fait au numéro d'un jour dans la semaine)
- * \param id_creneau L'identifiant d'un créneau dans la base de données
- */
 int ligne_libre(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_creneau){
   FILE *fichier_rq;
   char *requete_txt;
@@ -167,17 +122,6 @@ int ligne_libre(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_cre
   return res;
 }
 
-/*!
- * \brief  Planifie une journée
- *
- * Pour chaque créneau de la journée, vérifie si une ou plusieurs lignes sont ouvrables.
- * Si oui, alors on y ouvre autant de lignes que possible.
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- * \param id_semaine L'identifiant d'une semaine dans la base de données
- * \param id_jour L'identifiant d'un jour dans la base de données (qui correspond en fait au numéro d'un jour dans la semaine)
- */
 void generer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour){
   int id_creneau, nbl, i, id_ligne;
 
@@ -193,15 +137,6 @@ void generer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour){
   return;
 }
 
-/*!
- * \brief Planifie tous les jours d'une semaine
- *
- * Appelle generer_edt_jour pour tous les jours d'une semaine donnée.
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- * \param id_semaine L'identifiant d'une semaine dans la base de données
-*/
 void generer_edt_semaine(sqlite3 *db, FILE *logs, int id_semaine){
   int id_jour;
 
@@ -212,15 +147,6 @@ void generer_edt_semaine(sqlite3 *db, FILE *logs, int id_semaine){
   return;
 }
 
-/*!
- * \brief Supprime la planification d'une semaine
- *
- * Retire chaque entrée concernant la semaine donnée de la table travaille
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- * \param id_semaine L'identifiant d'une semaine dans la base de données
- */
 void nettoyer_edt_semaine(sqlite3 *db, FILE *logs, int id_semaine){
   FILE *fichier_rq;
   char *requete_txt;
@@ -241,24 +167,12 @@ void nettoyer_edt_semaine(sqlite3 *db, FILE *logs, int id_semaine){
   free(requete_txt);
   return ;
 }
-/*!
- * \brief Nettoie puis régénère la planification d'une semaine
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- * \param id_semaine L'identifiant d'une semaine dans la base de données
- */
+
 void maj_edt_semaine(sqlite3 *db, FILE *logs, int id_semaine){
   nettoyer_edt_semaine(db, logs, id_semaine);
   generer_edt_semaine(db, logs, id_semaine);
 }
 
-/*!
- * \brief Nettoie la planification de toutes les semaines
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
- */
 void nettoyer_tous_edt(sqlite3 *db, FILE *logs){
   FILE *fichier_rq;
   char *requete_txt;
@@ -279,15 +193,6 @@ void nettoyer_tous_edt(sqlite3 *db, FILE *logs){
   return ;
 }
 
-/*!
- * \brief Génère la planification de toutes les semaines
- *
- * Récupère l'ensemble des semaines présentes dans la bdd et génère pour chacune
- * sa planification
- *
- * \param db La bdd sur laquelle interagir
- * \param logs Le fichier de où écrire les logs
-*/
 void generer_tous_edt(sqlite3 *db, FILE *logs){
   FILE *fichier_rq;
   char *requete_txt;
