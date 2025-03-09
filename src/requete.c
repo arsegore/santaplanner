@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 int err_alloc(void *p){
     if (p == NULL){
         fprintf(stderr, "Erreur d'allocation mémoire\n");
@@ -52,6 +53,18 @@ int fermer_bdd(sqlite3 *db, FILE *logs){
   return 1;
 }
 
+/*!
+ * \brief Compile une requete
+ *
+ * Appelle la fonction sqlite3_prepare_v2, qui prépare une requête à partir d'un code SQL
+ * pour son éxécution
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param requete_txt Le code de la requête (code SQL)
+ * \param rq Un pointeur vers l'objet sqlite3_stmt qui correspondra à la requête
+ * \param lecture Un pointeur vers la portion restante de requete_txt
+ * \param logs Le fichier où écrire les logs
+*/
 int compiler_requete(sqlite3 *db, char *requete_txt, sqlite3_stmt **rq, const char **lecture, FILE *logs){
   int res;
 
@@ -64,6 +77,13 @@ int compiler_requete(sqlite3 *db, char *requete_txt, sqlite3_stmt **rq, const ch
   return res;
 }
 
+/*!
+ * \brief Crée une nouvelle table de résultats
+ *
+ * Alloue une zone mémoire pour contenir les résultats d'une requête
+ *
+ * \param nb_col Le nombre de colonnes renvoyées par la requête
+ */
 table_resultat *creer_table_res(int nb_col){
   table_resultat *res = NULL;
 
@@ -197,12 +217,12 @@ char *charger_requete(FILE * fichier_requete){
     return req;
 }
 
-void inserer_id(sqlite3_stmt *rq, int id){
-  sqlite3_bind_int(rq, 1, id);
-
-  return;
-}
-
+/*!
+ * \brief Affiche tous les lutins inscrits dans la base de données
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier où écrire les logs
+*/
 void afficher_lutins(sqlite3 *db, FILE *logs){
   FILE *fichier_rq;
   char *requete_txt;
@@ -225,7 +245,6 @@ void afficher_lutins(sqlite3 *db, FILE *logs){
   free(requete_txt);
 }
 
-
 table_resultat * requete_edt_ligne(sqlite3 *db, FILE *logs, int id){
   FILE *fichier_rq;
   char *requete_txt;
@@ -238,7 +257,7 @@ table_resultat * requete_edt_ligne(sqlite3 *db, FILE *logs, int id){
   requete_txt = charger_requete(fichier_rq);
 
   compiler_requete(db, requete_txt, &rq, &lecture, logs);
-  inserer_id(rq, id);
+  sqlite3_bind_int(rq, 1, id);
   t = executer_requete(rq, logs);
 
   fclose(fichier_rq);
@@ -259,7 +278,7 @@ table_resultat *requete_edt_lutin(sqlite3 *db, FILE *logs, int id){
   requete_txt = charger_requete(fichier_rq);
 
   compiler_requete(db, requete_txt, &rq, &lecture, logs);
-  inserer_id(rq, id);
+  sqlite3_bind_int(rq, 1,id);
   t = executer_requete(rq, logs);
 
   fclose(fichier_rq);

@@ -1,12 +1,14 @@
 CC=gcc
 CFLAGS=-W -Wall
 
-run:
-	_DATA_PATH_=$(PWD)/data build/santaplanner
+.PHONY: all all_but_sqlite doc
 
-all: sqlite3.o requete.o generation.o ui_term.o main.o santaplanner
+all: sqlite3.o requete.o generation.o ui_term.o main.o santaplanner doc
 
-all_but_sqlite: requete.o generation.o ui_term.o main.o santaplanner
+all_but_sqlite: requete.o generation.o ui_term.o main.o santaplanner doc
+
+doc:
+	doxygen ./Doxyfile
 
 santaplanner:
 	gcc build/main.o build/ui_term.o build/generation.o build/requete.o build/sqlite3.o -o build/santaplanner
