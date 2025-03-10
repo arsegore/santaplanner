@@ -41,7 +41,7 @@ void consulter_edt_ligne_terminal(sqlite3 *db, FILE *logs){
   t = requete_edt_ligne(db, logs, id);
 
   printf("+-----------------------------------------------------------+\n");
-  printf("| Jour      | Semaine   | Début     | Fin       | Ligne     |\n");
+  printf("| Jour    | Num Sem | Mois    | Début   | Fin     |  Ligne  |\n");
 
   afficher_resultats(t);
   liberer_resultats(t);
