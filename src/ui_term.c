@@ -126,7 +126,7 @@ void inscrire_absence_terminal(sqlite3 *db, FILE *logs){
   }
   printf("Inscription réussie\n");
   printf("***************************************\n");
-  printf("Mise à jour des emploi du temps concernés...");
+  printf("Mise à jour des emploi du temps concernés...\n");
   maj_edt_semaine(db, logs, id_semaine);
 
   liberer_resultats(t);

@@ -1,11 +1,14 @@
 CC=gcc
 CFLAGS=-W -Wall
 
-.PHONY: all all_but_sqlite doc
+.PHONY: all all_but_sqlite doc build
 
-all: sqlite3.o requete.o generation.o ui_term.o main.o santaplanner doc
+all: build sqlite3.o requete.o generation.o ui_term.o main.o santaplanner doc
 
-all_but_sqlite: requete.o generation.o ui_term.o main.o santaplanner doc
+all_but_sqlite: build requete.o generation.o ui_term.o main.o santaplanner doc
+
+build:
+	mkdir -p build
 
 doc:
 	doxygen ./Doxyfile
@@ -27,3 +30,6 @@ requete.o:
 
 sqlite3.o: 
 	gcc -c $(CFLAGS) src/sqlite3.c -o build/sqlite3.o
+
+clean:
+	rm -rf build doc
