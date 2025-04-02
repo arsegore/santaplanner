@@ -13,6 +13,8 @@ int main(){
   int statut = 1;
   sqlite3 *db = NULL;
   FILE *logs;
+  edt e;
+  int i, j ;
 
   /* Acces aux logs */
   logs = fopen("logs", "a+");
@@ -22,12 +24,11 @@ int main(){
   ouvrir_bdd("data/santadata2.db", &db, logs);
 
  /*nb_lignes_ouvrables(db, logs, semaine2id(db, logs, 1, 1, 2025), 1);*/
-
   while (statut == 1){
-   statut = menu_principal(db, logs);
+    statut = menu_principal(db, logs);
   }
-
-
+  
+ 
   fermer_bdd(db, logs);
   fclose(logs);
   exit(EXIT_SUCCESS);
