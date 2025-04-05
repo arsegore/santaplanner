@@ -67,8 +67,10 @@ liste_chainee inserer_tri(liste_chainee l, int val){
 
 liste_chainee inserer_fin(liste_chainee l, int val){
   liste_chainee courant = l, lnew = NULL;
-
+  
+  printf("1\n");
   lnew = inserer_tete(lnew, val);
+  printf("2\n");
   if (est_vide(l)){
     return lnew;
   }
@@ -79,6 +81,7 @@ liste_chainee inserer_fin(liste_chainee l, int val){
 
   lnew->precedent = courant;
   courant->suivant = lnew;
+  printf("insertion de %d dans %p\n", val, l);
 
   return l;
 }

@@ -2,6 +2,7 @@
 #define GENERATION_H_
 
 #include "sqlite3.h"
+#include "liste_chainee.h"
 #include <stdio.h>
 
 /*!
@@ -9,6 +10,9 @@
  *
  * \brief En-tête des fonctions de planification de la ligne de production
 */
+
+/* Un edt est un tableau de cellules */
+typedef liste_chainee edt[20][7]; 
 
 /*!
  * \fn int semaine2id(sqlite3 *db, FILE *logs, int num_semaine, int mois, int annee)
@@ -33,6 +37,7 @@ int semaine2id(sqlite3 *db, FILE *logs, int num_semaine, int mois, int annee);
  * \param id_creneau L'identifiant d'un créneau dans la base de données
 */
 int nb_lignes_ouvrables(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_creneau);
+
 
 /*!
  * \fn void ouvrir_ligne(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_creneau, int id_ligne);
@@ -139,4 +144,9 @@ void nettoyer_tous_edt(sqlite3 *db, FILE *logs);
 */
 void generer_tous_edt(sqlite3 *db, FILE *logs);
 
-#endif // GENERATION_H_
+
+void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois);
+
+void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois, int id_ligne);
+
+#endif

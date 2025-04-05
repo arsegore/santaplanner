@@ -232,7 +232,9 @@ void init_edt(edt e){
   }
 }
 
-void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois, int id_ligne){
+
+/* PLANNING GLOBAL DES LIGNES (toutes les lignes pr chaque creneau) */ 
+void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois){
   FILE *fichier_rq;
   char *requete_txt;
   sqlite3_stmt *rq;
@@ -240,9 +242,36 @@ void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int id_sem
   table_resultat *t;
   int i;
 
-  printf("apagnan");
-
   fichier_rq = fopen("data/edt_ligne_semaine.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+  /* Execution de la requete */
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_semaine);
+  sqlite3_bind_int(rq, 2, mois); 
+  t = executer_requete(rq, logs);
+  afficher_resultats(t);
+
+  init_edt(e); /* Un edt est une matrice de listes */ 
+  /* Premiere colonne : les id_creneau 
+   * Deuxieme colonne : les id_jour 
+   * Troisieme colonne : les id_ligne */ 
+  for (i = 0; i < t->nb_ligne; i++){
+     e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1] = inserer_fin(e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1], atoi(t->valeurs[i][2]));
+  }
+
+  return ;
+}
+/* PLANNING GLOBAL D'UNE LIGNE (affiche les lutins qui bossent dessus à un creneau donné */
+void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois, int id_ligne){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+  int i;
+
+  fichier_rq = fopen("data/edt_ligne_semaine_avec_id.sql", "r");
   if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
   requete_txt = charger_requete(fichier_rq);
   /* Execution de la requete */
@@ -253,16 +282,45 @@ void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int id_sem
   t = executer_requete(rq, logs);
   afficher_resultats(t);
 
-  init_edt(e);
+  init_edt(e); /* Un edt est une matrice de listes */ 
   /* Premiere colonne : les id_creneau 
    * Deuxieme colonne : les id_jour 
-   * Troisieme semaine : les id_ligne */ 
+   * Troisieme colonne : les id_lutin */ 
   for (i = 0; i < t->nb_ligne; i++){
-    inserer_fin(e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1], id_ligne);
+     e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1] = inserer_fin(e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1], atoi(t->valeurs[i][2]));
   }
 
-  return ; 
-} /* PROBLEME : risque d'overwrite, revoir eventuellement le type cellule */
-       
+  return ;
+}
+
+
+
+
+void creation_table_edt_lutin_semaine(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois, int id_lutin){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+  int i;
+
+  fichier_rq = fopen("data/edt_ligne_semaine.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+  
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_semaine);
+  sqlite3_bind_int(rq, 2, mois); 
+  sqlite3_bind_int(rq, 3, id_lutin);
+  t = executer_requete(rq, logs);
+  afficher_resultats(t);
+
+  init_edt(e);
+  for (i = 0; i < t->nb_ligne; i++){
+     e[ atoi(t->valeurs[i][0])][ atoi(t->valeurs[i][1])] = inserer_fin(e[ atoi(t->valeurs[i][0])][ atoi(t->valeurs[i][1])], atoi(t->valeurs[i][2]));
+  }
+
+  return ;
+}
 
 
