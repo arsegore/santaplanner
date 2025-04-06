@@ -336,3 +336,24 @@ table_resultat *requete_inscrire_absence(sqlite3 *db, FILE *logs, int id_lutin, 
 
   return t;
 }
+
+table_resultat *requete_supprimer_lutin(sqlite3 *db, FILE *logs, int id_lutin){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/supprimer_lutin.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_lutin);
+  t = executer_requete(rq,logs);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+  return t;
+}
+

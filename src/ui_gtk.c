@@ -354,7 +354,23 @@ void afficher_menu_lutins(AppData *app_data) {
     gtk_box_append(GTK_BOX(box_principale), edt);
 }
 
+void supprimer_lutin(GtkWidget *button, gpointer data){
+    AppDataLtn *app_data_ltn = (AppDataLtn *) data;
+    table_resultat *t; 
+    int id_lutin; 
 
+    id_lutin = app_data_ltn->id_lutin;
+    t = requete_supprimer_lutin(db, logs, id_lutin);
+    if (t != NULL){
+        printf("suppression réussie\n"); 
+    }
+    liberer_resultats(t);
+    
+    maj_liste_lutins();
+    nettoyer_tous_edt(db, logs);
+    generer_tous_edt(db,logs);
+    afficher_grid_donnees(app_data_ltn->app_data);
+}
 
 void ajouter_absence(GtkWidget *button, gpointer data){
     AppDataLtn *app_data_ltn = (AppDataLtn *)data;
@@ -382,6 +398,8 @@ void ajouter_absence(GtkWidget *button, gpointer data){
     maj_edt_semaine(db, logs, id_semaine);
     printf("mise à jour de l'edt de la semaine %d, du mois %d, l'année %d...\n", semaine, mois, annee);
     gtk_box_append(GTK_BOX(app_data->box_principale), label_res); 
+
+    liberer_resultats(t);
     return;
 
 }
@@ -505,7 +523,7 @@ void afficher_grid_donnees(AppData *app_data){
         /* bouton pr supprimer ce lutin de la bdd */
         btn_supprimer_lutin = gtk_button_new_with_label("Supprimer");
         g_object_set_data(G_OBJECT(btn_supprimer_lutin), "lutin_id", GINT_TO_POINTER(app_data_ltn->id_lutin));
-        // g_signal_connect(btn_supprimer_lutin, "clicked", G_CALLBACK(supprimer_lutin), app_data);
+        g_signal_connect(btn_supprimer_lutin, "clicked", G_CALLBACK(supprimer_lutin), app_data_ltn);
 
         gtk_grid_attach(GTK_GRID(grid_donnees), gtk_label_new(liste_lutins[i].nom), 0, i, 1, 1);
         gtk_grid_attach(GTK_GRID(grid_donnees), gtk_label_new(liste_lutins[i].specialite), 1, i, 1, 1);
@@ -581,6 +599,23 @@ void afficher_menu_donnees(AppData *app_data){
 
 }
 
+GtkWidget *afficher_changelog(){
+    FILE *f_changelog; 
+    GtkWidget *text_view;
+    char txt_buffer[2048] = "\0";
+
+    f_changelog = fopen("changelog.txt", "r"); 
+    if (f_changelog == NULL){
+        fprintf(stderr, "Impossible d'accéder aux changelogs\n");
+    }
+    fread(txt_buffer, 1, 2048 - 1, f_changelog);
+    text_view = gtk_text_view_new();
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    gtk_text_buffer_set_text(buffer, txt_buffer, -1);
+    fclose(f_changelog);
+
+    return text_view;
+}
 
 
 void afficher_menu_principal(GtkWindow *fenetre) {
@@ -589,6 +624,7 @@ void afficher_menu_principal(GtkWindow *fenetre) {
     AppData *app_data_donnees;
     GtkWidget *stack;
     GtkWidget *stack_switcher;
+    GtkWidget *changelog;
     GtkWidget *page_accueil;
     GtkWidget *label_bienvenue;
     GtkWidget *page_lignes;
@@ -606,11 +642,13 @@ void afficher_menu_principal(GtkWindow *fenetre) {
     gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(stack_switcher), GTK_STACK(stack));
 
     /* création de la page d'accueil */
+    changelog = afficher_changelog();
     page_accueil = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
     label_bienvenue = gtk_label_new("🎅 Bienvenue sur Santaplanner !");
     gtk_widget_set_halign(label_bienvenue, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(label_bienvenue, GTK_ALIGN_CENTER);
     gtk_box_append(GTK_BOX(page_accueil), label_bienvenue);
+    gtk_box_append(GTK_BOX(page_accueil), changelog);
     gtk_stack_add_titled(GTK_STACK(stack), page_accueil, "accueil", "Accueil");
 
     /* création de la page des lignes : affichage des edt globaux de la prod */ 
