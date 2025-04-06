@@ -1,7 +1,8 @@
 #ifndef REQUETE_H_
 #define REQUETE_H_
 
-#include "../include/sqlite3.h"
+#include "sqlite3.h"
+#include "types.h"
 #include <stdio.h>
 
 /*
@@ -10,19 +11,6 @@
  * \brief Fichier d'en-tête de l'interface C/SQlite de santaplanner
 */
 
-
-/*!
- * \brief Une entrée d'une table de résultats
-*/
-typedef char requete_valeur[100];
-
-/*!
- * \brief Un tableau de résultats
-*/
-typedef struct {
-  requete_valeur ** valeurs;
-  int nb_ligne, nb_col;
-}table_resultat;
 
 /*!
  * \fn err_alloc(void *p)

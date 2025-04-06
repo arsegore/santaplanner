@@ -7,11 +7,11 @@
 
 
 int err_alloc(void *p){
-    if (p == NULL){
-        fprintf(stderr, "Erreur d'allocation mémoire\n");
-        return 1;
-    }
-    return 0;
+  if (p == NULL){
+    fprintf(stderr, "Erreur d'allocation mémoire\n");
+    return 1;
+  }
+  return 0;
 }
 
 int info_temps(char *temps_buffer ){
@@ -147,17 +147,17 @@ table_resultat *executer_requete(sqlite3_stmt *rq, FILE *logs){
 
     for (i = 0; i < nb_col; i++){
       switch(sqlite3_column_type(rq, i)){
-      case (SQLITE3_TEXT):
-        strncpy(res->valeurs[res->nb_ligne-1][i], (const char*) sqlite3_column_text(rq, i), strlen( (const char *) sqlite3_column_text(rq, i))+1);
-        break;
-      case (SQLITE_INTEGER):
-        snprintf(res->valeurs[res->nb_ligne-1][i], 50, "%d",sqlite3_column_int(rq, i));
-        break;
-      case (SQLITE_FLOAT):
-        snprintf(res->valeurs[res->nb_ligne-1][i], 50, "%f",sqlite3_column_double(rq, i));
-        break;
-      default:
-        break;
+        case (SQLITE3_TEXT):
+          strncpy(res->valeurs[res->nb_ligne-1][i], (const char*) sqlite3_column_text(rq, i), strlen( (const char *) sqlite3_column_text(rq, i))+1);
+          break;
+        case (SQLITE_INTEGER):
+          snprintf(res->valeurs[res->nb_ligne-1][i], 50, "%d",sqlite3_column_int(rq, i));
+          break;
+        case (SQLITE_FLOAT):
+          snprintf(res->valeurs[res->nb_ligne-1][i], 50, "%f",sqlite3_column_double(rq, i));
+          break;
+        default:
+          break;
 
       }
     }
@@ -199,22 +199,22 @@ void afficher_resultats(table_resultat *t){
 }
 
 char *charger_requete(FILE * fichier_requete){
-    int taille;
-    char *req;
+  int taille;
+  char *req;
 
-    /* On récupère la taille du fichier (le nb de caracteres)
+  /* On récupère la taille du fichier (le nb de caracteres)
        en bougeant la tete de lecture */
-    fseek(fichier_requete, 0, SEEK_END);
-    taille = ftell(fichier_requete);
-    fseek(fichier_requete, 0, SEEK_SET);
+  fseek(fichier_requete, 0, SEEK_END);
+  taille = ftell(fichier_requete);
+  fseek(fichier_requete, 0, SEEK_SET);
 
-    req = (char *) malloc (taille * sizeof(char));
-    if (req == NULL) return NULL;
+  req = (char *) malloc (taille * sizeof(char));
+  if (req == NULL) return NULL;
 
-    /* Recopie du fichier */
-    fread(req, sizeof(char), taille, fichier_requete);
+  /* Recopie du fichier */
+  fread(req, sizeof(char), taille, fichier_requete);
 
-    return req;
+  return req;
 }
 
 /*!
@@ -328,7 +328,9 @@ table_resultat *requete_inscrire_absence(sqlite3 *db, FILE *logs, int id_lutin, 
   sqlite3_bind_int(rq, 4, id_creneau);
 
   t = executer_requete(rq, logs);
-
+  if (t != NULL){
+    printf("supp: ltn = %d, smn = %d; crn = %d\n", id_lutin, id_semaine, id_creneau);
+  }
   fclose(fichier_rq);
   free(requete_txt);
 

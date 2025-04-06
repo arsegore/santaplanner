@@ -230,7 +230,7 @@ void init_edt(edt e){
   int i, j;
   for (i = 0; i < 14; i++){
     for (j = 0; j < 7; j++){
-       e[i][j] = liste_vide(); 
+      e[i][j] = liste_vide(); 
     } 
   }
 }
@@ -261,7 +261,7 @@ void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int numero
    * Deuxieme colonne : les id_jour 
    * Troisieme colonne : les id_ligne */ 
   for (i = 0; i < t->nb_ligne; i++){
-     e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1] = inserer_fin(e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1], atoi(t->valeurs[i][2]));
+    e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1] = inserer_fin(e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1], atoi(t->valeurs[i][2]));
   }
 
   return ;
@@ -292,14 +292,14 @@ void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, in
    * Deuxieme colonne : les id_jour 
    * Troisieme colonne : les id_lutin */ 
   for (i = 0; i < t->nb_ligne; i++){
-     e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1] = inserer_fin(e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1], atoi(t->valeurs[i][2]));
+    e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1] = inserer_fin(e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1], atoi(t->valeurs[i][2]));
   }
 
   return ;
 }
 
 
-void creation_table_edt_lutin_semaine(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois, int id_lutin){
+void creation_table_edt_lutin_semaine(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee, int id_lutin){
   FILE *fichier_rq;
   char *requete_txt;
   sqlite3_stmt *rq;
@@ -307,37 +307,27 @@ void creation_table_edt_lutin_semaine(sqlite3 *db, FILE *logs, edt e, int id_sem
   table_resultat *t;
   int i;
 
-  fichier_rq = fopen("data/edt_ligne_semaine.sql", "r");
+  fichier_rq = fopen("data/edt_lutin_semaine.sql", "r");
   if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
   requete_txt = charger_requete(fichier_rq);
-  
+
   compiler_requete(db, requete_txt, &rq, &lecture, logs);
-  sqlite3_bind_int(rq, 1, id_semaine);
+  sqlite3_bind_int(rq, 1, numero);
   sqlite3_bind_int(rq, 2, mois); 
-  sqlite3_bind_int(rq, 3, id_lutin);
+  sqlite3_bind_int(rq, 3, annee);
+  sqlite3_bind_int(rq, 4, id_lutin);
   t = executer_requete(rq, logs);
   afficher_resultats(t);
 
   init_edt(e);
   for (i = 0; i < t->nb_ligne; i++){
-     e[ atoi(t->valeurs[i][0])][ atoi(t->valeurs[i][1])] = inserer_fin(e[ atoi(t->valeurs[i][0])][ atoi(t->valeurs[i][1])], atoi(t->valeurs[i][2]));
+    e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1 ] = inserer_fin(e[ atoi(t->valeurs[i][0]) - 1 ][ atoi(t->valeurs[i][1]) - 1 ], atoi(t->valeurs[i][2]));
   }
 
   liberer_resultats(t);
   return ;
 }
 
-lutin *ajouter_lutin(int id, char *nom){
-  lutin *l; 
-  l = (lutin *) malloc (sizeof(lutin)); 
-  if (l == NULL){
-    fprintf(stderr, "Erreur d'allocation\n"); 
-    exit(EXIT_FAILURE);
-  }
-  l->id = id; 
-  strcpy(l->nom, nom); 
-  return l;
-}
 
 void remplir_liste_lutins(){ 
   FILE *fichier_rq;
@@ -350,7 +340,7 @@ void remplir_liste_lutins(){
   fichier_rq = fopen("data/liste_lutins.sql", "r");
   if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
   requete_txt = charger_requete(fichier_rq);
-  
+
   compiler_requete(db, requete_txt, &rq, &lecture, logs);
   t = executer_requete(rq, logs);
   nb_lutins = t->nb_ligne;
@@ -364,29 +354,35 @@ void remplir_liste_lutins(){
   }
 
   for (i = 0; i < nb_lutins ; i++){
-       liste_lutins[i].id = atoi(t->valeurs[i][0]);
-       strcpy(liste_lutins[i].nom, t->valeurs[i][1]); 
+    liste_lutins[i].id = atoi(t->valeurs[i][0]);
+    strcpy(liste_lutins[i].nom, t->valeurs[i][1]);
+    strcpy(liste_lutins[i].specialite, t->valeurs[i][2]);
   }
 
   liberer_resultats(t);
   return;
 }
 
+void maj_liste_lutins(){
+  free(liste_lutins);
+  remplir_liste_lutins();
+}
+
 void afficher_liste_lutins(){
   int i; 
   for (i = 0; i < nb_lutins; i++){
-       printf("id : %d, nom : %s\n", liste_lutins[i].id, liste_lutins[i].nom); 
+    printf("id : %d, nom : %s\n", liste_lutins[i].id, liste_lutins[i].nom); 
   }
   return; 
 }
 
 const char *recup_nom_lutin(int id){
   for (int i = 0; i < nb_lutins; i++) {
-        if (liste_lutins[i].id == id) {
-            return liste_lutins[i].nom;
-        }
+    if (liste_lutins[i].id == id) {
+      return liste_lutins[i].nom;
     }
-    return "???";
+  }
+  return "???";
 }
 
-  
+

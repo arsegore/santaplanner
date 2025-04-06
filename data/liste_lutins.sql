@@ -1,3 +1,3 @@
-SELECT id, nom 
+SELECT id, nom, specialite 
 FROM lutin
 ;

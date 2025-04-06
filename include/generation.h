@@ -2,7 +2,7 @@
 #define GENERATION_H_
 
 #include "sqlite3.h"
-#include "liste_chainee.h"
+#include "types.h"
 #include <stdio.h>
 
 /*!
@@ -11,8 +11,6 @@
  * \brief En-tête des fonctions de planification de la ligne de production
 */
 
-/* Un edt est un tableau de cellules */
-typedef liste_chainee edt[20][7]; 
 
 /*!
  * \fn int semaine2id(sqlite3 *db, FILE *logs, int num_semaine, int mois, int annee)
@@ -151,8 +149,12 @@ void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, in
 
 void remplir_liste_lutins();
 
+void maj_liste_lutins();
+
 void afficher_liste_lutins();
 
 const char *recup_nom_lutin(int id);
+
+void creation_table_edt_lutin_semaine(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee, int id_lutin);
 
 #endif
