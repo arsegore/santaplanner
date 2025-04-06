@@ -71,6 +71,55 @@ GtkWidget *affiche_edt_ligne(edt e) {
     return grid;
 }
 
+GtkWidget *affiche_edt_ligne_noms_lutins(edt e) {
+    GtkWidget *grid, *textview;
+    GtkTextBuffer *buffer;
+    liste_chainee l;
+    cellule *curr;
+    char contenu[256];
+    int i, j, id;
+
+    grid = gtk_grid_new();
+
+    GtkCssProvider *css_provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_data(css_provider,
+        ".cellule-edt { border: 1px solid black; }", -1);
+    gtk_style_context_add_provider_for_display(
+        gdk_display_get_default(),
+        GTK_STYLE_PROVIDER(css_provider),
+        GTK_STYLE_PROVIDER_PRIORITY_USER
+    );
+
+    for (i = 0; i < 14; i++) {
+        for (j = 0; j < 5; j++) {
+
+            textview = gtk_text_view_new();
+            gtk_widget_set_hexpand(textview, TRUE);
+            buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
+            gtk_widget_add_css_class(textview, "cellule-edt");
+
+            l = e[i][j];
+
+            if (est_vide(l)) {
+                gtk_text_buffer_set_text(buffer, "\n\n", -1);
+            } else {
+                contenu[0] = '\0';
+                curr = l;
+                while (curr != NULL) {
+                    id = curr->valeur;
+                    strncat(contenu, recup_nom_lutin(id), 256 - strlen(contenu) - 1);
+                    strncat(contenu, "\n", sizeof(char));
+                    curr = curr->suivant;
+                }
+                gtk_text_buffer_set_text(buffer, contenu, -1);
+            }
+
+            gtk_grid_attach(GTK_GRID(grid), textview, j + 1, i + 1, 1, 1);
+        }
+    }
+
+    return grid;
+}
 
 void mettre_en_forme_edt(GtkWidget *grid) {
     const char *jours[] = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"};
@@ -99,7 +148,7 @@ void mettre_en_forme_edt(GtkWidget *grid) {
 }
 
 
-void mettre_a_jour_edt(GtkWidget *button, gpointer data) {
+void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
     AppData *app_data = (AppData *)data;  
     const gchar *lutin_id;
     int semaine, mois, annee, id_ligne;
@@ -115,61 +164,70 @@ void mettre_a_jour_edt(GtkWidget *button, gpointer data) {
 
     /* on genere l'edt correspondant */
     if (id_ligne == 0){
-        creation_table_edt_ligne_semaine(db, logs, nouvel_edt, semaine, mois);
+        creation_table_edt_ligne_semaine(db, logs, nouvel_edt, semaine, mois, annee);
+        nouvel_edt_widget = affiche_edt_ligne(nouvel_edt);
+
     }else{
-        creation_table_edt_ligne_semaine_avec_id(db, logs, nouvel_edt, semaine, mois, id_ligne);
+        creation_table_edt_ligne_semaine_avec_id(db, logs, nouvel_edt, semaine, mois, annee, id_ligne);
+        nouvel_edt_widget = affiche_edt_ligne_noms_lutins(nouvel_edt);
+
     }
     /* on cree le gtkwidget correspondant */ 
-    nouvel_edt_widget = affiche_edt_ligne(nouvel_edt);
-    mettre_en_forme_edt(nouvel_edt_widget);
+        mettre_en_forme_edt(nouvel_edt_widget);
 
-    // Supprimer l'ancien EDT et insérer le nouveau dans le conteneur
+    /* on retire l'ancien edt affiché et le remplace par celui qui vient d'etre généré */
     gtk_box_remove(GTK_BOX(app_data->box_principale), app_data->edt);
     gtk_box_append(GTK_BOX(app_data->box_principale), nouvel_edt_widget);
 
-    // Mettre à jour la référence dans `AppData`
+    /* on met à jour la structure des données */
     app_data->edt = nouvel_edt_widget;
 
 }
 
 
 
-void afficher_menu_principal(GtkWindow *fenetre) {
-    GtkWidget *box_principale, *header_bar, *btn_absence, *btn_edt_lutins;
-    GtkWidget *entry_semaine, *entry_mois, *entry_annee, *entry_lutin, *combo_ligne;
-    GtkWidget *label_semaine, *label_mois, *label_annee, *label_lutin, *label_ligne;
-    GtkWidget *edt, *btn_confirmer;
-    AppData *app_data;
+void afficher_menu_lignes(AppData *app_data) {
+    // Déclarations en début de fonction
+    GtkWidget *box_principale;
+    GtkWidget *header_bar;
+    GtkWidget *entry_semaine;
+    GtkWidget *entry_mois;
+    GtkWidget *entry_annee;
+    GtkWidget *combo_ligne;
+    GtkWidget *btn_confirmer;
+    GtkWidget *edt;
+    GtkWidget *label_semaine, *label_mois, *label_annee;
 
-    /* creation d'une structure appdata qui permet de transmettre plus facilement les données manipulées */
-    app_data = g_new(AppData, 1);
-    app_data->fenetre = fenetre;
+    /* on affecte la "boite" (qui stocke l'ui) à celle pointée dans appdata, donc on dessine l'ui dans la boite transmise par 
+     * la fonction appelante */
+    box_principale = app_data->box_principale;
 
-    /* creation de l'interface */
-    box_principale = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0); /* box qui contient tte l'ui */
-    app_data->box_principale = box_principale;
+    /* creation de la barre d'en-tete où l'utilisateur va faire ses inputs */
     header_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
 
-    btn_absence = gtk_button_new_with_label("Insérer une absence"); /* bouton pr passer au menu d'insertion d'absence */
-    btn_edt_lutins = gtk_button_new_with_label("EDT Lutins"); /* bouton pr passer en mode d'affichage des edt des lutins */
+    /* qlq labels pr rendre la barre plus lisible */
+    label_semaine = gtk_label_new("Semaine : ");
+    label_mois = gtk_label_new("Mois :");
+    label_annee = gtk_label_new("Année : ");
 
-    entry_semaine = gtk_spin_button_new_with_range(1, 53, 1); /* entrée d'une semaine */
+    /* pr entrer le numero de la semaine */
+    entry_semaine = gtk_spin_button_new_with_range(1, 4, 1);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(entry_semaine), 1);
-    app_data->entry_semaine = entry_semaine;  // Stockage
+    app_data->entry_semaine = entry_semaine;
 
-    entry_mois = gtk_spin_button_new_with_range(1, 12, 1); /* entrée du mois */ 
+    /* pr entrer le numero du mois */
+    entry_mois = gtk_spin_button_new_with_range(1, 12, 1);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(entry_mois), 12);
     app_data->entry_mois = entry_mois;
 
-    entry_annee = gtk_spin_button_new_with_range(2023, 2100, 1); /* entrée de l'année */
+    /* pr entre l'année */
+    entry_annee = gtk_spin_button_new_with_range(2023, 2100, 1);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(entry_annee), 2025);
     app_data->entry_annee = entry_annee;
 
-    entry_lutin = gtk_entry_new(); /* entrée d'un id_lutin */
-    gtk_entry_set_placeholder_text(GTK_ENTRY(entry_lutin), "ID Lutin");
-    app_data->entry_lutin = entry_lutin;
 
-    combo_ligne = gtk_combo_box_text_new(); /* entrée d'un id_ligne */
+    /* comme on se limite à 5 lignes on va faire une ptite liste déroulante, c plus beau mdrrr */ 
+    combo_ligne = gtk_combo_box_text_new();
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_ligne), "Toutes");
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_ligne), "Ligne 1");
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_ligne), "Ligne 2");
@@ -179,33 +237,84 @@ void afficher_menu_principal(GtkWindow *fenetre) {
     gtk_combo_box_set_active(GTK_COMBO_BOX(combo_ligne), 0);
     app_data->combo_ligne = combo_ligne;
 
+    /* un bouton pour confirmer (qui appellera la fonction qui met à jour l'affichage) */
     btn_confirmer = gtk_button_new_with_label("Confirmer");
 
-    edt = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0); /* EDT vide au lancement de l'appli */
+    /* une nouvelle box qui contiendra l'affichage de l'edt et on la transmet via l'appdata */
+    edt = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     app_data->edt = edt;
-    
-    /* connexion des éléments */
-    g_signal_connect(btn_confirmer, "clicked", G_CALLBACK(mettre_a_jour_edt), app_data);
 
+    g_signal_connect(btn_confirmer, "clicked", G_CALLBACK(mettre_a_jour_edt_ligne), app_data);
     
-    gtk_box_append(GTK_BOX(header_bar), btn_absence);
-    gtk_box_append(GTK_BOX(header_bar), btn_edt_lutins);
+    gtk_box_append(GTK_BOX(header_bar), label_semaine);
     gtk_box_append(GTK_BOX(header_bar), entry_semaine);
+    gtk_box_append(GTK_BOX(header_bar), label_mois);
     gtk_box_append(GTK_BOX(header_bar), entry_mois);
+    gtk_box_append(GTK_BOX(header_bar), label_annee);
     gtk_box_append(GTK_BOX(header_bar), entry_annee);
-    gtk_box_append(GTK_BOX(header_bar), entry_lutin);
     gtk_box_append(GTK_BOX(header_bar), combo_ligne);
     gtk_box_append(GTK_BOX(header_bar), btn_confirmer);
 
     gtk_box_append(GTK_BOX(box_principale), header_bar);
     gtk_box_append(GTK_BOX(box_principale), edt);
-    
-
-    gtk_window_set_child(GTK_WINDOW(fenetre), box_principale);
 }
 
 
-void ouverture_fenetre(GtkApplication* app, gpointer u_donnees){
+void afficher_menu_principal(GtkWindow *fenetre) {
+    AppData *app_data;
+    GtkWidget *stack;
+    GtkWidget *stack_switcher;
+    GtkWidget *page_accueil;
+    GtkWidget *label_bienvenue;
+    GtkWidget *page_lignes;
+    GtkWidget *page_lutins;
+    GtkWidget *page_donnees;
+    GtkWidget *container;
+
+    app_data = g_new0(AppData, 1);
+    app_data->fenetre = fenetre;
+
+    /* on cree une stack (c en grooos une sorte de gestion d'onglets, ça me sert pr gerer les sous menus) */ 
+    stack = gtk_stack_new();
+    gtk_stack_set_transition_type(GTK_STACK(stack), GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT_RIGHT);
+    gtk_stack_set_transition_duration(GTK_STACK(stack), 300);
+
+    /* il faut un stack switcher pr manipuler la stack */
+    stack_switcher = gtk_stack_switcher_new();
+    gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(stack_switcher), GTK_STACK(stack));
+
+    /* création de la page d'accueil */
+    page_accueil = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
+    label_bienvenue = gtk_label_new("🎅 Bienvenue sur Santaplanner !");
+    gtk_widget_set_halign(label_bienvenue, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(label_bienvenue, GTK_ALIGN_CENTER);
+    gtk_box_append(GTK_BOX(page_accueil), label_bienvenue);
+    gtk_stack_add_titled(GTK_STACK(stack), page_accueil, "accueil", "Accueil");
+
+    /* création de la page des lignes : affichage des edt globaux de la prod */ 
+    page_lignes = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    app_data->box_principale = page_lignes;
+    afficher_menu_lignes(app_data);
+    gtk_stack_add_titled(GTK_STACK(stack), page_lignes, "lignes", "Lignes");
+
+    /* création de la page des lutins : affichage des edt spécifiques d'un lutin*/
+    page_lutins = gtk_label_new("À venir !");
+    gtk_stack_add_titled(GTK_STACK(stack), page_lutins, "lutins", "Lutins");
+
+    /* création de la page des données : pr interagir avec la bdd, donc ajouter/supprimer des lutins ou des absences*/ 
+    page_donnees = gtk_label_new("À venir !");
+    gtk_stack_add_titled(GTK_STACK(stack), page_donnees, "donnees", "Données");
+
+    /* box dans laquelle l'ui est dessiné */
+    container = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_box_append(GTK_BOX(container), stack_switcher);
+    gtk_box_append(GTK_BOX(container), stack);
+
+    /* on connecte la box à la fenetre */
+    gtk_window_set_child(fenetre, container);
+}
+
+void ouverture_fenetre(GtkApplication* app){
   GtkWidget *fenetre;
 
   fenetre = gtk_application_window_new (app);
@@ -220,7 +329,9 @@ void ouverture_fenetre(GtkApplication* app, gpointer u_donnees){
 int demarrage_appli(int argc, char **argv){
   GtkApplication *app;
   int status;  
-
+  
+  remplir_liste_lutins();
+  afficher_liste_lutins();
   app = gtk_application_new ("org.santaplanner", G_APPLICATION_DEFAULT_FLAGS);
   g_signal_connect (app, "activate", G_CALLBACK (ouverture_fenetre), NULL);
   status = g_application_run (G_APPLICATION (app), argc, argv);

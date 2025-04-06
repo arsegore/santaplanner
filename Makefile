@@ -5,9 +5,9 @@ GTKFLAGS2:=$(shell pkg-config --libs gtk4)
 
 .PHONY: all all_but_sqlite doc build
 
-all: build ui_gtk.o sqlite3.o requete.o liste_chainee.o generation.o ui_term.o main.o santaplanner doc
+all: build var.o ui_gtk.o sqlite3.o requete.o liste_chainee.o generation.o ui_term.o main.o santaplanner doc
 
-all_but_sqlite: build ui_gtk.o requete.o liste_chainee.o generation.o ui_term.o main.o santaplanner doc
+all_but_sqlite: build var.o ui_gtk.o requete.o liste_chainee.o generation.o ui_term.o main.o santaplanner doc
 
 gtk_only: build ui_gtk.o 
 	
@@ -19,10 +19,13 @@ doc:
 	doxygen ./Doxyfile
 
 santaplanner:
-	gcc `pkg-config --cflags gtk4`build/main.o build/ui_gtk.o build/liste_chainee.o build/ui_term.o build/generation.o build/requete.o build/sqlite3.o -o build/santaplanner `pkg-config --libs gtk4`
+	gcc `pkg-config --cflags gtk4`build/main.o build/var.o build/ui_gtk.o build/liste_chainee.o build/ui_term.o build/generation.o build/requete.o build/sqlite3.o -o build/santaplanner `pkg-config --libs gtk4`
 
 main.o:
 	gcc -c $(CFLAGS) `pkg-config --cflags gtk4` src/main.c -o build/main.o
+
+var.o:
+	gcc -c $(CFLAGS) src/var.c -o build/var.o
 
 ui_gtk.o: 
 	gcc -c $(CFLAGS) `pkg-config --cflags gtk4` src/ui_gtk.c -o build/ui_gtk.o 

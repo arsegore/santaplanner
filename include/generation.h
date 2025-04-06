@@ -145,8 +145,14 @@ void nettoyer_tous_edt(sqlite3 *db, FILE *logs);
 void generer_tous_edt(sqlite3 *db, FILE *logs);
 
 
-void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois);
+void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee);
 
-void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, int id_semaine, int mois, int id_ligne);
+void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee, int id_ligne);
+
+void remplir_liste_lutins();
+
+void afficher_liste_lutins();
+
+const char *recup_nom_lutin(int id);
 
 #endif

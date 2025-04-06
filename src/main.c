@@ -10,9 +10,6 @@
 #include <time.h>
 #include <string.h>
 
-sqlite3 *db = NULL;
-FILE *logs = NULL;
-
 int main(int argc, char **argv){
   int statut = 1; 
   edt e;
@@ -33,7 +30,6 @@ int main(int argc, char **argv){
   }
   */
 
-  creation_table_edt_ligne_semaine(db, logs, e, 2, 1);
   demarrage_appli(argc, argv);
 
 
