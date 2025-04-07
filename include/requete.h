@@ -210,5 +210,7 @@ table_resultat *requete_inscrire_absence(sqlite3 *db, FILE *logs, int id_lutin, 
 
 table_resultat *requete_supprimer_lutin(sqlite3 *db, FILE *logs, int id_lutin);
 
+int edt_est_vide(sqlite3 *db, FILE *logs);
+
 
 #endif /* REQUETE_H_*/

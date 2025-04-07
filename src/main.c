@@ -29,7 +29,10 @@ int main(int argc, char **argv){
     statut = menu_principal(db, logs);
   }
   */
-
+  if (edt_est_vide(db, logs)){
+    printf(".. génération des emplois du temps (uniquement au premier lancement)\n");
+    generer_tous_edt(db, logs);
+  }
   demarrage_appli(argc, argv);
 
 

@@ -357,3 +357,25 @@ table_resultat *requete_supprimer_lutin(sqlite3 *db, FILE *logs, int id_lutin){
   return t;
 }
 
+int edt_est_vide(sqlite3 *db, FILE *logs){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/edt_est_vide.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  t = executer_requete(rq,logs);
+  if (atoi(t->valeurs[0][0]) == 0) return 1; 
+
+  fclose(fichier_rq);
+  free(requete_txt);
+  return 0;
+}
+
+
+
