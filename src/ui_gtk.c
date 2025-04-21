@@ -6,115 +6,19 @@
 /* globalement toutes les fonctions se ressemblent donc jv pas tout commenter : déclarations -> creation des objets de l'ui -> 
  * -> transmission dans app_data -> placement dans l'ui */
 
-GtkWidget *affiche_edt_ligne(edt e) {
-    GtkWidget *grid, *textview;
+
+ /* crée le widget contenant l'edt (ansi que les jours et les créneaux)
+    je mets le tout dans une scrolled window, comme ça si les cellules s'étendent et bah le logiciel
+    va pas s'agrandir jusqu'à sortir de l'écran
+    */
+ GtkWidget *creer_edt_widget(edt e, gboolean afficher_noms) {
+    GtkWidget *grid, *textview, *scrolled_window, *label;
     GtkTextBuffer *buffer;
     liste_chainee l;
     cellule *curr;
     char contenu[256];
     char ligne[16];
-    int i, j;
-
-    grid = gtk_grid_new();
-
-    /* gestion du style des cellules */
-    GtkCssProvider *css_provider = gtk_css_provider_new();
-    gtk_css_provider_load_from_data(css_provider,
-                                    ".cellule-edt { border: 1px solid black; }", -1);
-    gtk_style_context_add_provider_for_display(
-        gdk_display_get_default(),
-        GTK_STYLE_PROVIDER(css_provider),
-        GTK_STYLE_PROVIDER_PRIORITY_USER
-    );
-
-    /* on parcourt l'edt et remplit le gtkwidget qui sera ensuite affiché */
-    for (i = 0; i < 14; i++) {
-        for (j = 0; j < 5; j++) {
-
-            /* on cree une textview qui servira à stocker du texte, un buffer en gros */
-            textview = gtk_text_view_new();
-            gtk_widget_set_hexpand(textview, TRUE);
-            buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
-            gtk_widget_add_css_class(textview, "cellule-edt");
-
-            /* on recup la liste correspondante à la cellule parcourue */
-            l = e[i][j];
-
-            /* si elle est vide on affiche une case vide */
-            if (est_vide(l)) {
-                gtk_text_buffer_set_text(buffer, "\n\n", -1);
-            } else { /* sinon on remplit avec les id_ligne/lutins (selon la requete) */ 
-                contenu[0] = '\0'; /* on part d'une chaine vide qu'on remplit au fur et à mesure */ 
-                curr = l;
-                while (curr != NULL) {
-                    snprintf(ligne, sizeof(ligne), "%d\n", curr->valeur);
-                    strncat(contenu, ligne, sizeof(contenu) - strlen(contenu) - 1);
-                    curr = curr->suivant;
-                }
-                gtk_text_buffer_set_text(buffer, contenu, -1);
-            }
-
-            // Ajout à la grille
-            gtk_grid_attach(GTK_GRID(grid), textview, j + 1, i + 1, 1, 1); // Décalage de 1 pour laisser place aux titres
-        }
-    }
-
-    return grid;
-}
-
-GtkWidget *affiche_edt_ligne_noms_lutins(edt e) {
-    GtkWidget *grid, *textview;
-    GtkTextBuffer *buffer;
-    liste_chainee l;
-    cellule *curr;
-    char contenu[256];
     int i, j, id;
-
-    grid = gtk_grid_new();
-    
-    /* gestion du style css */
-    GtkCssProvider *css_provider = gtk_css_provider_new();
-    gtk_css_provider_load_from_data(css_provider,
-                                    ".cellule-edt { border: 1px solid black; }", -1);
-    gtk_style_context_add_provider_for_display(
-        gdk_display_get_default(),
-        GTK_STYLE_PROVIDER(css_provider),
-        GTK_STYLE_PROVIDER_PRIORITY_USER
-    );
-
-    /* on remplit la grille avec les valeurs */
-    for (i = 0; i < 14; i++) {
-        for (j = 0; j < 5; j++) {
-
-            textview = gtk_text_view_new();
-            gtk_widget_set_hexpand(textview, TRUE);
-            buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
-            gtk_widget_add_css_class(textview, "cellule-edt");
-
-            l = e[i][j];
-
-            if (est_vide(l)) {
-                gtk_text_buffer_set_text(buffer, "\n\n", -1);
-            } else {
-                contenu[0] = '\0';
-                curr = l;
-                while (curr != NULL) {
-                    id = curr->valeur;
-                    strncat(contenu, recup_nom_lutin(id), 256 - strlen(contenu) - 1); /* on récup le nom d'un lutin à partir de son id pour l'afficher dans l'edt */
-                    strncat(contenu, "\n", sizeof(char));
-                    curr = curr->suivant;
-                }
-                gtk_text_buffer_set_text(buffer, contenu, -1);
-            }
-            
-            gtk_grid_attach(GTK_GRID(grid), textview, j + 1, i + 1, 1, 1);
-        }
-    }
-
-    return grid;
-}
-
-void mettre_en_forme_edt(GtkWidget *grid) {
     const char *jours[] = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"};
     const char *horaires[] = {
         "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00",
@@ -123,24 +27,90 @@ void mettre_en_forme_edt(GtkWidget *grid) {
         "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00",
         "20:00 - 21:00", "21:00 - 22:00"
     };
-    GtkWidget *label;
 
-    /* remplissage de la premiere ligne avec les j de la semaine */
-    for (int j = 1; j <= 5; j++) { 
-        label = gtk_label_new(jours[j - 1]);
+    GtkCssProvider *css_provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_data(css_provider,
+        ".cellule-edt { border: 1px solid black; padding: 10px; font-size: 14px; text-align: center; background-color: #f9f9f9; }"
+        ".cellule-edt-plein { background-color: #d1f7d1; }"
+        ".cellule-edt-vide { background-color: #f7d1d1; }"
+        ".titre-jour, .titre-horaire { font-weight: bold; background-color: #eeeeee; padding: 6px; border: 1px solid #ccc; }", -1);
+    gtk_style_context_add_provider_for_display(
+        gdk_display_get_default(),
+        GTK_STYLE_PROVIDER(css_provider),
+        GTK_STYLE_PROVIDER_PRIORITY_USER
+    );
+
+    grid = gtk_grid_new();
+    gtk_widget_set_hexpand(grid, TRUE);
+    gtk_widget_set_vexpand(grid, TRUE);
+
+    /* le coin vide */
+    label = gtk_label_new("");
+    gtk_grid_attach(GTK_GRID(grid), label, 0, 0, 1, 1);
+
+    /* on gere d'abord la premiere ligne : contient les jours*/
+    for (j = 0; j < 5; j++) {
+        label = gtk_label_new(jours[j]);
         gtk_widget_add_css_class(label, "titre-jour");
-        gtk_grid_attach(GTK_GRID(grid), label, j, 0, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), label, j + 1, 0, 1, 1);
     }
 
-    /* remplissage de la 1ere colonne avec les creneaux */
-    for (int i = 1; i <= 14; i++) { 
-        label = gtk_label_new(horaires[i - 1]); 
+    /* puis la premiere colonne : contient les créneaux*/
+    for (i = 0; i < 14; i++) {
+        label = gtk_label_new(horaires[i]);
         gtk_widget_add_css_class(label, "titre-horaire");
-        gtk_grid_attach(GTK_GRID(grid), label, 0, i, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), label, 0, i + 1, 1, 1);
     }
+
+    /* et mtn l'affichage du contenu de l'edt*/
+    for (i = 0; i < 14; i++) {
+        for (j = 0; j < 5; j++) {
+            /* on crée une nouvelle text-view et on lui applique une classe css*/
+            textview = gtk_text_view_new();
+            buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
+            gtk_widget_set_hexpand(textview, TRUE);
+            gtk_widget_set_vexpand(textview, TRUE);
+            gtk_widget_add_css_class(textview, "cellule-edt");
+
+            l = e[i][j];
+            if (est_vide(l)) { /* si la cellule est vide */
+                gtk_text_buffer_set_text(buffer, "\n\n", -1);
+                gtk_widget_add_css_class(textview, "cellule-edt-vide");
+            } else { /* sinon on génère une chaine avec le contenu*/
+                contenu[0] = '\0';
+                curr = l;
+                while (curr != NULL) {
+                    if (afficher_noms) {
+                        id = curr->valeur;
+                        strncat(contenu, recup_nom_lutin(id), sizeof(contenu) - strlen(contenu) - 1);
+                    } else {
+                        snprintf(ligne, sizeof(ligne), "%d\n", curr->valeur);
+                        strncat(contenu, ligne, sizeof(contenu) - strlen(contenu) - 1);
+                    }
+                    strncat(contenu, "\n", sizeof(contenu) - strlen(contenu) - 1);
+                    curr = curr->suivant;
+                }
+                /* et on met cette chaine dans un buffer*/
+                gtk_text_buffer_set_text(buffer, contenu, -1);
+                gtk_widget_add_css_class(textview, "cellule-edt-plein");
+            }
+
+            gtk_text_view_set_justification(GTK_TEXT_VIEW(textview), GTK_JUSTIFY_CENTER);
+            gtk_grid_attach(GTK_GRID(grid), textview, j + 1, i + 1, 1, 1);
+        }
+    }
+
+    /* on met le tout dans une scrolled window pour éviter que la fenetre grandisse jusqu'à 
+    *  dépasser de l'écran*/
+    scrolled_window = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), grid);
+
+    return scrolled_window;
 }
 
 
+/* met à jour les données avec un nouvel edt de lignes correspondant à ce qu'à demandé l'utilsateur */
 void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
     AppData *app_data = (AppData *)data;  
     const gchar *lutin_id;
@@ -157,15 +127,13 @@ void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
     /* on genere l'edt correspondant */
     if (id_ligne == 0){
         creation_table_edt_ligne_semaine(db, logs, nouvel_edt, semaine, mois, annee);
-        nouvel_edt_widget = affiche_edt_ligne(nouvel_edt);
+        nouvel_edt_widget = creer_edt_widget(nouvel_edt, FALSE);
 
     }else{
         creation_table_edt_ligne_semaine_avec_id(db, logs, nouvel_edt, semaine, mois, annee, id_ligne);
-        nouvel_edt_widget = affiche_edt_ligne_noms_lutins(nouvel_edt);
+        nouvel_edt_widget = creer_edt_widget(nouvel_edt, TRUE);
 
     }
-    /* on cree le gtkwidget correspondant */ 
-    mettre_en_forme_edt(nouvel_edt_widget);
 
     /* on retire l'ancien edt affiché et le remplace par celui qui vient d'etre généré */
     gtk_box_remove(GTK_BOX(app_data->box_principale), app_data->edt);
@@ -176,7 +144,7 @@ void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
 
 }
 
-
+/* idem mais pour les edt des lutins */
 void mettre_a_jour_edt_lutin(GtkWidget *button, gpointer data) {
     AppData *app_data = (AppData *)data;
     int semaine, mois, annee, id_combo, id_lutin;
@@ -199,8 +167,7 @@ void mettre_a_jour_edt_lutin(GtkWidget *button, gpointer data) {
 
     /* on recrée l'edt */
     creation_table_edt_lutin_semaine(db, logs, nouvel_edt, semaine, mois, annee, id_lutin);
-    nouvel_edt_widget = affiche_edt_ligne(nouvel_edt);
-    mettre_en_forme_edt(nouvel_edt_widget);
+    nouvel_edt_widget = creer_edt_widget(nouvel_edt, FALSE);
 
     /* on remplace l'ancien edt */
     gtk_box_remove(GTK_BOX(app_data->box_principale), app_data->edt);
@@ -208,6 +175,8 @@ void mettre_a_jour_edt_lutin(GtkWidget *button, gpointer data) {
     app_data->edt = nouvel_edt_widget;
 }
 
+/* gère l'affichage de l'onglet "Lignes", donc notamment les différents boutons que 
+l'utilisateur peut utiliser pr selectionner un edt à afficher */
 void afficher_menu_lignes(AppData *app_data) {
     GtkWidget *box_principale;
     GtkWidget *header_bar;
@@ -278,8 +247,11 @@ void afficher_menu_lignes(AppData *app_data) {
 
     gtk_box_append(GTK_BOX(box_principale), header_bar);
     gtk_box_append(GTK_BOX(box_principale), edt);
+
 }
 
+/* juste une petite fonction qui remplit un combo (liste déroulante mais askip ça s'appelle 
+comme ça dans gtk) avec les noms des lutins, qui sont je le rappelle stockés dans une var globale*/
 void remplit_combo_lutins(AppData *app_data){
     GtkWidget *combo_lutins;
 
@@ -295,8 +267,7 @@ void remplit_combo_lutins(AppData *app_data){
     app_data->combo_lutins = combo_lutins;
 }
 
-
-
+/* bon pareil que pour les lignes mais c'est l'onglet "Lutins"*/
 void afficher_menu_lutins(AppData *app_data) {
     GtkWidget *box_principale;
     GtkWidget *header_bar;
@@ -354,6 +325,7 @@ void afficher_menu_lutins(AppData *app_data) {
     gtk_box_append(GTK_BOX(box_principale), edt);
 }
 
+/* fonction qui supprime un lutin de la bdd et met à jour ce qui doit l'etre */
 void supprimer_lutin(GtkWidget *button, gpointer data){
     AppDataLtn *app_data_ltn = (AppDataLtn *) data;
     table_resultat *t; 
@@ -372,6 +344,8 @@ void supprimer_lutin(GtkWidget *button, gpointer data){
     afficher_grid_donnees(app_data_ltn->app_data);
 }
 
+/* ajoute une nouvelle absence dans la bdd (pr rappel, inserer une absence = supprimer une dispo)
+et régénère ensuite les edt*/
 void ajouter_absence(GtkWidget *button, gpointer data){
     AppDataLtn *app_data_ltn = (AppDataLtn *)data;
     AppData *app_data = app_data_ltn->app_data;
@@ -404,7 +378,7 @@ void ajouter_absence(GtkWidget *button, gpointer data){
 
 }
 
-
+/* affiche le menu d'ajout d'absence (qui est une fentre pop up grossomodo)*/
 void afficher_menu_ajouter_absence(GtkWidget *button, gpointer data) {
     AppDataLtn *app_data_ltn_old = (AppDataLtn *)data; 
     AppDataLtn *app_data_ltn;
@@ -488,7 +462,7 @@ void afficher_menu_ajouter_absence(GtkWidget *button, gpointer data) {
     gtk_window_present(GTK_WINDOW(fenetre_absence));
 }
 
-
+/* s'occupe de l'affichage de la grid contenant les lutins et les boutons pr interagir avec la bdd*/
 void afficher_grid_donnees(AppData *app_data){
     GtkWidget *grid_donnees;
     GtkWidget *btn_declarer_disponibilite;
@@ -536,7 +510,7 @@ void afficher_grid_donnees(AppData *app_data){
     gtk_box_append(GTK_BOX(app_data->box_principale), scrolled_window);
 }
 
-
+/* là ça gère l'ajout d'un nouveau lutin dans la bdd*/
 void ajouter_lutin(GtkWidget *button, gpointer data) {
     AppData *app_data = (AppData *)data;
     GtkEntryBuffer *nom_buffer;
@@ -567,7 +541,7 @@ void ajouter_lutin(GtkWidget *button, gpointer data) {
     return;
 }
 
-
+/* afficahage de l'onglet "Données"*/
 void afficher_menu_donnees(AppData *app_data){
     GtkWidget *header_bar;
     GtkWidget *entry_nom_lutin;
@@ -599,6 +573,7 @@ void afficher_menu_donnees(AppData *app_data){
 
 }
 
+/* affichage du changelog dans l'onglet "Accueil"*/
 GtkWidget *afficher_changelog(){
     FILE *f_changelog; 
     GtkWidget *text_view;
@@ -617,7 +592,7 @@ GtkWidget *afficher_changelog(){
     return text_view;
 }
 
-
+/* ça ça s'occupe d'afficher le menu principal, donc en gros le squelette global de la fenetre*/
 void afficher_menu_principal(GtkWindow *fenetre) {
     AppData *app_data_lignes;
     AppData *app_data_lutins;
@@ -684,6 +659,7 @@ void afficher_menu_principal(GtkWindow *fenetre) {
     gtk_window_set_child(fenetre, container);
 }
 
+/* ouvre la fenetre */
 void ouverture_fenetre(GtkApplication* app){
     GtkWidget *fenetre;
 
@@ -695,7 +671,7 @@ void ouverture_fenetre(GtkApplication* app){
     gtk_window_present (GTK_WINDOW (fenetre));
 }
 
-
+/* lance Santaplanner*/
 int demarrage_appli(int argc, char **argv){
     GtkApplication *app;
     int status;  
