@@ -42,6 +42,7 @@ typedef struct {
     GtkWidget *btn_ajouter_lutin;
     GtkWidget *scrolled_window_donnees;
     GtkWidget *combo_creneaux; 
+    gboolean est_absence;
 } AppData;
 
 typedef struct{

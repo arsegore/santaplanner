@@ -337,6 +337,33 @@ table_resultat *requete_inscrire_absence(sqlite3 *db, FILE *logs, int id_lutin, 
   return t;
 }
 
+table_resultat *requete_inscrire_dispo(sqlite3 *db, FILE *logs, int id_lutin, int id_jour, int id_semaine, int id_creneau){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/inscrire_dispo.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_lutin);
+  sqlite3_bind_int(rq, 2, id_jour);
+  sqlite3_bind_int(rq, 3, id_semaine);
+  sqlite3_bind_int(rq, 4, id_creneau);
+
+  t = executer_requete(rq, logs);
+  if (t != NULL){
+    printf("ajt: ltn = %d, smn = %d; crn = %d\n", id_lutin, id_semaine, id_creneau);
+  }
+  fclose(fichier_rq);
+  free(requete_txt);
+
+  return t;
+}
+
 table_resultat *requete_supprimer_lutin(sqlite3 *db, FILE *logs, int id_lutin){
   FILE *fichier_rq;
   char *requete_txt;
