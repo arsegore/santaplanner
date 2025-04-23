@@ -1,19 +1,16 @@
-# Compiler and flags
 CC = gcc
 CFLAGS = -W -Wall
 GTK_CFLAGS = `pkg-config --cflags gtk4`
 GTK_LFLAGS = `pkg-config --libs gtk4`
-
-# Directories
 BUILD_DIR = build
 SRC_DIR = src
 BIN_DIR = bin
 
-# Source files and object files
+# sources et objets
 SRC_FILES = main.c var.c ui_gtk.c liste_chainee.c ui_term.c generation.c requete.c sqlite3.c export.c
 OBJ_FILES = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
-# Targets
+# cibles
 .PHONY: all all_but_sqlite gtk_only build bin doc clean
 
 all: bin build santaplanner doc
@@ -34,7 +31,6 @@ doc:
 santaplanner: $(OBJ_FILES)
 	$(CC) $^ -o $(BIN_DIR)/santaplanner $(GTK_LFLAGS)
 
-# Pattern rule for object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c $(CFLAGS) $(GTK_CFLAGS) $< -o $@
 
