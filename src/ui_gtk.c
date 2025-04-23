@@ -30,7 +30,7 @@
 
     GtkCssProvider *css_provider = gtk_css_provider_new();
     gtk_css_provider_load_from_data(css_provider,
-        ".cellule-edt { border: 1px solid black; padding: 10px; font-size: 14px; text-align: center; background-color: #f9f9f9; }"
+        ".cellule-edt { border: 1px solid black; padding: 10px; font-size: 16px; font-weight: bold; text-align: center; background-color: #f9f9f9; }"
         ".cellule-edt-plein { background-color: #d1f7d1; }"
         ".cellule-edt-vide { background-color: #f7d1d1; }"
         ".titre-jour, .titre-horaire { font-weight: bold; background-color: #eeeeee; padding: 6px; border: 1px solid #ccc; }", -1);
@@ -115,8 +115,12 @@ void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
     AppData *app_data = (AppData *)data;  
     const gchar *lutin_id;
     int semaine, mois, annee, id_ligne;
-    edt nouvel_edt;
+    edt_wrp *nouvel_edt_wrp;
     GtkWidget *nouvel_edt_widget;
+
+    /* allocation de la structure contenant l'edt, pr ensuite pouvoir le transmettre sous forme de pointeur*/
+    nouvel_edt_wrp = g_new0(edt_wrp, 1);
+    init_edt(nouvel_edt_wrp->edt_tab);
 
     /* on recupere les input de l'utilisateur */
     semaine = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_data->entry_semaine));
@@ -126,12 +130,12 @@ void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
 
     /* on genere l'edt correspondant */
     if (id_ligne == 0){
-        creation_table_edt_ligne_semaine(db, logs, nouvel_edt, semaine, mois, annee);
-        nouvel_edt_widget = creer_edt_widget(nouvel_edt, FALSE);
+        creation_table_edt_ligne_semaine(db, logs, nouvel_edt_wrp->edt_tab, semaine, mois, annee);
+        nouvel_edt_widget = creer_edt_widget(nouvel_edt_wrp->edt_tab, FALSE);
 
     }else{
-        creation_table_edt_ligne_semaine_avec_id(db, logs, nouvel_edt, semaine, mois, annee, id_ligne);
-        nouvel_edt_widget = creer_edt_widget(nouvel_edt, TRUE);
+        creation_table_edt_ligne_semaine_avec_id(db, logs, nouvel_edt_wrp->edt_tab, semaine, mois, annee, id_ligne);
+        nouvel_edt_widget = creer_edt_widget(nouvel_edt_wrp->edt_tab, TRUE);
 
     }
 
@@ -140,7 +144,9 @@ void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
     gtk_box_append(GTK_BOX(app_data->box_principale), nouvel_edt_widget);
 
     /* on met à jour la structure des données */
+    app_data->edt_tab = nouvel_edt_wrp;
     app_data->edt = nouvel_edt_widget;
+    app_data->est_edt_lutin = FALSE;
 
 }
 
@@ -148,8 +154,12 @@ void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
 void mettre_a_jour_edt_lutin(GtkWidget *button, gpointer data) {
     AppData *app_data = (AppData *)data;
     int semaine, mois, annee, id_combo, id_lutin;
-    edt nouvel_edt;
+    edt_wrp *nouvel_edt_wrp;
     GtkWidget *nouvel_edt_widget;
+
+    /* allocation de la structure contenant l'edt, pr ensuite pouvoir le transmettre sous forme de pointeur*/
+    nouvel_edt_wrp = g_new0(edt_wrp, 1);
+    init_edt(nouvel_edt_wrp->edt_tab);    
 
     /* on recup les inputs */
     semaine = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_data->entry_semaine));
@@ -166,13 +176,112 @@ void mettre_a_jour_edt_lutin(GtkWidget *button, gpointer data) {
     printf("id_lutin sélectionné : %d\n", id_lutin);
 
     /* on recrée l'edt */
-    creation_table_edt_lutin_semaine(db, logs, nouvel_edt, semaine, mois, annee, id_lutin);
-    nouvel_edt_widget = creer_edt_widget(nouvel_edt, FALSE);
+    creation_table_edt_lutin_semaine(db, logs, nouvel_edt_wrp->edt_tab, semaine, mois, annee, id_lutin);
+    nouvel_edt_widget = creer_edt_widget(nouvel_edt_wrp->edt_tab, FALSE);
 
     /* on remplace l'ancien edt */
     gtk_box_remove(GTK_BOX(app_data->box_principale), app_data->edt);
     gtk_box_append(GTK_BOX(app_data->box_principale), nouvel_edt_widget);
+
+    /* on met à jour la structure des données */
     app_data->edt = nouvel_edt_widget;
+    app_data->edt_tab = nouvel_edt_wrp;
+    app_data->est_edt_lutin = TRUE;
+}
+
+void fichier_export_choisi(GObject *source, GAsyncResult *res, gpointer user_data) {
+    AppData *app_data;
+    GFile *file;
+    char *chemin;
+    edt_wrp *e_wrp;
+    int semaine, mois, annee;
+
+    /* récupération des données*/
+    app_data = (AppData *)user_data;
+    if (!app_data || !app_data->edt_tab) {
+        fprintf(stderr, "Erreur : app_data ou edt est NULL\n");
+        return;
+    }
+    printf("%p\n", app_data);
+    printf("%p\n", app_data->edt_tab);
+
+    e_wrp = app_data->edt_tab;
+
+    /* recuperation des infos concernant l'edt */
+    semaine = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_data->entry_semaine));
+    mois = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_data->entry_mois));
+    annee = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(app_data->entry_annee));
+
+    /* on recup le fichier choisi dans la fenetre (deja existant ou pas)*/
+    file = gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source), res, NULL);
+    if (file == NULL) {
+        // Aucun fichier sélectionné, on retourne simplement
+        fprintf(stderr, "Aucun fichier sélectionné\n");
+        return;
+    }
+
+    /* a partir de ce fichier, on recupere le chemin */
+    chemin = g_file_get_path(file);
+    if (chemin == NULL) {
+        fprintf(stderr, "Erreur : Impossible de récupérer le chemin du fichier\n");
+        g_object_unref(file);
+        return;
+    }
+
+    /* on exporte l'edt dans un .ics*/
+    if (app_data->est_edt_lutin){
+        exporter_edt_lutin_en_ical(e_wrp, chemin, semaine, mois, annee);
+    }else{
+        exporter_edt_lutin_en_ical(e_wrp, chemin, semaine, mois, annee);
+    }
+
+    /* liberation des objets gtk crées */
+    g_free(chemin);
+    g_object_unref(file);
+}
+
+void export_edt_ligne_gtk(GtkWidget *button, gpointer data) {
+    AppData *app_data;
+    GtkFileDialog *dialog;
+    GtkWindow *parent;
+
+    /* récupération des données*/
+    app_data = (AppData *)data;
+    if (!app_data || !app_data->fenetre) {
+        fprintf(stderr, "Erreur : app_data ou fenetre est NULL\n");
+        return;
+    }
+
+    parent = GTK_WINDOW(app_data->fenetre);
+
+    /* création d'une fenetre ds laquelle on peut choisir un chemin */
+    dialog = gtk_file_dialog_new();
+    gtk_file_dialog_set_initial_name(dialog, "edt_ligne.ics");
+
+    /* affichage de la fenetre et gestion du chemin choisi (ou fermeture)*/
+    gtk_file_dialog_save(dialog, parent, NULL, (GAsyncReadyCallback)fichier_export_choisi, app_data);
+}
+
+void export_edt_lutin_gtk(GtkWidget *button, gpointer data) {
+    AppData *app_data;
+    GtkFileDialog *dialog;
+    GtkWindow *parent;
+
+    /* récupération des données*/
+    app_data = (AppData *)data;
+    if (!app_data || !app_data->fenetre) {
+        fprintf(stderr, "Erreur : app_data ou fenetre est NULL\n");
+        return;
+    }
+
+    parent = GTK_WINDOW(app_data->fenetre);
+
+    /* création d'une fenetre ds laquelle on peut choisir un chemin */
+    dialog = gtk_file_dialog_new();
+    gtk_file_dialog_set_initial_name(dialog, "edt_lutin.ics");
+
+    /* affichage de la fenetre et gestion du chemin choisi (ou fermeture)*/
+    gtk_file_dialog_save(dialog, parent, NULL, (GAsyncReadyCallback)fichier_export_choisi, app_data);
 }
 
 /* gère l'affichage de l'onglet "Lignes", donc notamment les différents boutons que 
@@ -185,6 +294,7 @@ void afficher_menu_lignes(AppData *app_data) {
     GtkWidget *entry_annee;
     GtkWidget *combo_ligne;
     GtkWidget *btn_confirmer;
+    GtkWidget *btn_exporter;
     GtkWidget *edt;
     GtkWidget *label_semaine, *label_mois, *label_annee;
 
@@ -230,11 +340,15 @@ void afficher_menu_lignes(AppData *app_data) {
     /* un bouton pour confirmer (qui appellera la fonction qui met à jour l'affichage) */
     btn_confirmer = gtk_button_new_with_label("Confirmer");
 
+    /* un bouton pour exporter l'edt au format ical */
+    btn_exporter = gtk_button_new_with_label("Exporter");
+
     /* une nouvelle box qui contiendra l'affichage de l'edt et on la transmet via l'appdata */
     edt = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     app_data->edt = edt;
 
     g_signal_connect(btn_confirmer, "clicked", G_CALLBACK(mettre_a_jour_edt_ligne), app_data);
+    g_signal_connect(btn_exporter, "clicked", G_CALLBACK(export_edt_ligne_gtk), app_data);
 
     gtk_box_append(GTK_BOX(header_bar), label_semaine);
     gtk_box_append(GTK_BOX(header_bar), entry_semaine);
@@ -244,6 +358,7 @@ void afficher_menu_lignes(AppData *app_data) {
     gtk_box_append(GTK_BOX(header_bar), entry_annee);
     gtk_box_append(GTK_BOX(header_bar), combo_ligne);
     gtk_box_append(GTK_BOX(header_bar), btn_confirmer);
+    gtk_box_append(GTK_BOX(header_bar), btn_exporter);
 
     gtk_box_append(GTK_BOX(box_principale), header_bar);
     gtk_box_append(GTK_BOX(box_principale), edt);
@@ -276,6 +391,7 @@ void afficher_menu_lutins(AppData *app_data) {
     GtkWidget *entry_annee;
     GtkWidget *combo_lutins;
     GtkWidget *btn_confirmer;
+    GtkWidget *btn_exporter;
     GtkWidget *edt;
     GtkWidget *label_semaine, *label_mois, *label_annee, *label_lutin;
 
@@ -304,11 +420,13 @@ void afficher_menu_lutins(AppData *app_data) {
 
     
     btn_confirmer = gtk_button_new_with_label("Confirmer");
+    btn_exporter = gtk_button_new_with_label("Exporter");
 
     edt = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     app_data->edt = edt;
 
     g_signal_connect(btn_confirmer, "clicked", G_CALLBACK(mettre_a_jour_edt_lutin), app_data);
+    g_signal_connect(btn_exporter, "clicked", G_CALLBACK(export_edt_lutin_gtk), app_data);
 
     gtk_box_append(GTK_BOX(header_bar), label_semaine);
     gtk_box_append(GTK_BOX(header_bar), app_data->entry_semaine);
@@ -319,6 +437,7 @@ void afficher_menu_lutins(AppData *app_data) {
     gtk_box_append(GTK_BOX(header_bar), label_lutin);
     gtk_box_append(GTK_BOX(header_bar), app_data->combo_lutins);
     gtk_box_append(GTK_BOX(header_bar), btn_confirmer);
+    gtk_box_append(GTK_BOX(header_bar), btn_exporter);
 
     
     gtk_box_append(GTK_BOX(box_principale), header_bar);
@@ -589,7 +708,7 @@ void afficher_menu_donnees(AppData *app_data){
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_specialite), "Empaqueteur");
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_specialite), "Bricoleur");
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(combo_specialite), "Controleur");
-    gtk_combo_box_set_active(GTK_COMBO_BOX(combo_specialite), 0);  // Par défaut, Empaqueteur
+    gtk_combo_box_set_active(GTK_COMBO_BOX(combo_specialite), 0);
     app_data->combo_specialite = combo_specialite;
 
     btn_ajouter_lutin = gtk_button_new_with_label("Ajouter Lutin");

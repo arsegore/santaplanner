@@ -1,50 +1,42 @@
-CC=gcc
-CFLAGS=-W -Wall 
-GTK_CFLAGS=`pkg-config --cflags gtk4`
-GTK_LFLAGS=`pkg-config --libs gtk4`
+# Compiler and flags
+CC = gcc
+CFLAGS = -W -Wall
+GTK_CFLAGS = `pkg-config --cflags gtk4`
+GTK_LFLAGS = `pkg-config --libs gtk4`
 
+# Directories
+BUILD_DIR = build
+SRC_DIR = src
+BIN_DIR = bin
 
-.PHONY: all all_but_sqlite doc build
+# Source files and object files
+SRC_FILES = main.c var.c ui_gtk.c liste_chainee.c ui_term.c generation.c requete.c sqlite3.c export.c
+OBJ_FILES = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
-all: build var.o ui_gtk.o sqlite3.o requete.o liste_chainee.o generation.o ui_term.o main.o santaplanner doc
+# Targets
+.PHONY: all all_but_sqlite gtk_only build bin doc clean
 
-all_but_sqlite: build var.o ui_gtk.o requete.o liste_chainee.o generation.o ui_term.o main.o santaplanner doc
+all: bin build santaplanner doc
 
-gtk_only: build ui_gtk.o 
-	
+all_but_sqlite: build $(filter-out $(BUILD_DIR)/sqlite3.o, $(OBJ_FILES)) santaplanner doc
+
+gtk_only: build $(BUILD_DIR)/ui_gtk.o
 
 build:
-	mkdir -p build
+	mkdir -p $(BUILD_DIR)
+
+bin:
+	mkdir -p $(BIN_DIR)
 
 doc:
 	doxygen ./Doxyfile
 
-santaplanner:
-	gcc build/main.o build/var.o build/ui_gtk.o build/liste_chainee.o build/ui_term.o build/generation.o build/requete.o build/sqlite3.o -o build/santaplanner $(GTK_LFLAGS)
+santaplanner: $(OBJ_FILES)
+	$(CC) $^ -o $(BIN_DIR)/santaplanner $(GTK_LFLAGS)
 
-main.o:
-	gcc -c $(CFLAGS) $(GTK_CFLAGS) src/main.c -o build/main.o
-
-var.o:
-	gcc -c $(CFLAGS) $(GTK_CFLAGS) src/var.c -o build/var.o
-
-ui_gtk.o: 
-	gcc -c $(CFLAGS) $(GTK_CFLAGS) src/ui_gtk.c -o build/ui_gtk.o 
-
-liste_chainee.o:
-	gcc -c $(CFLAGS) $(GTK_CFLAGS) src/liste_chainee.c -o build/liste_chainee.o
-
-ui_term.o:
-	gcc -c $(CFLAGS) $(GTK_CFLAGS) src/ui_term.c -o build/ui_term.o
-
-generation.o:
-	gcc -c $(CFLAGS) $(GTK_CFLAGS) src/generation.c -o build/generation.o
-
-requete.o:
-	gcc -c $(CFLAGS) $(GTK_CFLAGS) src/requete.c -o build/requete.o
-
-sqlite3.o: 
-	gcc -c $(CFLAGS) src/sqlite3.c -o build/sqlite3.o
+# Pattern rule for object files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) -c $(CFLAGS) $(GTK_CFLAGS) $< -o $@
 
 clean:
-	rm -rf build doc
+	rm -rf $(BUILD_DIR) $(BIN_DIR) doc

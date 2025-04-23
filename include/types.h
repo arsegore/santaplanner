@@ -13,6 +13,10 @@ typedef struct{
 /* Un edt est un tableau de cellules */
 typedef liste_chainee edt[20][7];
 
+typedef struct{
+  edt edt_tab;
+}edt_wrp;
+
 /*!
  * \brief Une entrée d'une table de résultats
 */
@@ -37,6 +41,8 @@ typedef struct {
     GtkWidget *combo_lutins;
     GtkWidget *box_principale;
     GtkWidget *edt;
+    edt_wrp *edt_tab;
+    gboolean est_edt_lutin;
     GtkWidget *entry_nom_lutin;
     GtkWidget *combo_specialite;
     GtkWidget *btn_ajouter_lutin;
