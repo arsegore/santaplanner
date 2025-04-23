@@ -4,15 +4,33 @@
 #include <gtk/gtk.h>
 #include "liste_chainee.h"
 
+/*!
+ * \file types.h
+ *
+ * \brief Fichier d'en-tête contenant les définitions de types utilisés dans l'application
+ */
+
+/*!
+  * \brief Une structure modelisant un lutin 
+  */
 typedef struct{
   int id;
   char nom[50];
   char specialite[50];
 }lutin;
 
-/* Un edt est un tableau de cellules */
+/*!
+ * \brief Une structure modelisant un EDT
+ * 
+ * \details Chaque cellule de l'EDT est une liste chaînée, permettant de contenir plusieurs valeurs pour un même créneau
+*/
 typedef liste_chainee edt[20][7];
 
+/*!
+ * \brief Une structure contenant un EDT
+ * 
+ * \details Permet de passer l'EDT en paramètre à des fonctions GTK
+*/
 typedef struct{
   edt edt_tab;
 }edt_wrp;
@@ -30,6 +48,9 @@ typedef struct {
   int nb_ligne, nb_col;
 }table_resultat;
 
+/*!
+ * \brief Une structure contenant les données de l'application
+*/
 typedef struct {
     GtkWindow *fenetre;
     GtkWidget *entry_jour;
@@ -51,6 +72,9 @@ typedef struct {
     gboolean est_absence;
 } AppData;
 
+/*!
+ * \brief Une structure contenant les données de l'application combinées à un id de lutin
+*/
 typedef struct{
     AppData *app_data; 
     int id_lutin; 

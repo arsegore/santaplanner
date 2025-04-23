@@ -142,19 +142,83 @@ void nettoyer_tous_edt(sqlite3 *db, FILE *logs);
 */
 void generer_tous_edt(sqlite3 *db, FILE *logs);
 
-
+/*!
+ * \fn void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee)
+ * \brief Crée une table de planification pour une ligne donnée
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier de où écrire les logs
+ * \param e L'EDT à créer
+ * \param numero Le numéro de la ligne
+ * \param mois Le mois de la semaine
+ * \param annee L'année de la semaine
+ */
 void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee);
 
+/*!
+ * \fn void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee, int id_ligne)
+ * \brief Crée une table de planification pour une ligne donnée avec un id
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier de où écrire les logs
+ * \param e L'EDT à créer
+ * \param numero Le numéro de la ligne
+ * \param mois Le mois de la semaine
+ * \param annee L'année de la semaine
+ * \param id_ligne L'id de la ligne
+ */
 void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee, int id_ligne);
 
+/*!
+* \fn void remplir_liste_lutins()
+ * \brief Remplit la liste des lutins
+ *
+ * Récupère l'ensemble des lutins présents dans la base de données et les stocke
+ * dans un tableau de lutins
+ */
 void remplir_liste_lutins();
 
+/*!
+ *\fn maj_liste_lutins()
+ * \brief Met à jour la liste des lutins
+ *
+ * Récupère l'ensemble des lutins présents dans la base de données et les stocke
+ * dans un tableau de lutins
+ */
 void maj_liste_lutins();
 
+/*!
+ * \fn void afficher_liste_lutins()
+ * \brief Affiche la liste des lutins
+ *
+ * Récupère l'ensemble des lutins présents dans la base de données et les affiche
+ * dans la console
+ */
 void afficher_liste_lutins();
 
+/*!
+ \fn recup_nom_lutin(int id)
+    * \brief Récupère le nom d'un lutin
+    *
+    * Récupère le nom d'un lutin à partir de son id
+    *
+    * \param id L'id du lutin
+    * \return Le nom du lutin
+    */
 const char *recup_nom_lutin(int id);
 
+/*!
+ * \fn void creation_table_edt_lutin_semaine(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee, int id_lutin)
+ * \brief Crée une table de planification pour un lutin donné
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier de où écrire les logs
+ * \param e L'EDT à créer
+ * \param numero Le numéro du lutin
+ * \param mois Le mois de la semaine
+ * \param annee L'année de la semaine
+ * \param id_lutin L'id du lutin
+ */
 void creation_table_edt_lutin_semaine(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee, int id_lutin);
 
 #endif

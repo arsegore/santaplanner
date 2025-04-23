@@ -1,6 +1,11 @@
 #ifndef LISTE_CHAINEE_H
 #define LISTE_CHAINEE_H
 
+/*!
+* \file liste_chainee.h
+* \brief Fichier d'en-tête d'un TAD liste chaînée (et autres)
+*/
+
 typedef struct cellule{
   int valeur;
   struct cellule *precedent, *suivant;

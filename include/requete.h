@@ -208,8 +208,27 @@ table_resultat *requete_inscrire_lutin(sqlite3 *db, FILE *logs, char *nom, char 
  */
 table_resultat *requete_inscrire_absence(sqlite3 *db, FILE *logs, int id_lutin, int id_jour, int id_semaine, int id_creneau);
 
+/*!
+ * \fn table_resultat *requete_inscrire_dispo(sqlite3 *db, FILE *logs, int id_lutin, int id_jour, int id_semaine, int id_creneau);
+ * \brief Inscrit une disponibilité dans la base de données
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier où écrire les logs
+ * \param id_lutin L'id d'un lutin
+ * \param id_jour L'id d'un jour
+ * \param id_semaine L'id d'une semaine
+ * \param id_creneau L'id d'un creneau
+ */
 table_resultat *requete_inscrire_dispo(sqlite3 *db, FILE *logs, int id_lutin, int id_jour, int id_semaine, int id_creneau);
 
+/*!
+ * \fn table_resultat *requete_supprimer_lutin(sqlite3 *db, FILE *logs, int id_lutin);
+ * \brief Supprime un lutin de la base de données
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier où écrire les logs
+ * \param id_lutin L'id d'un lutin
+ */
 table_resultat *requete_supprimer_lutin(sqlite3 *db, FILE *logs, int id_lutin);
 
 int edt_est_vide(sqlite3 *db, FILE *logs);

@@ -5,7 +5,7 @@
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = santaplanner
-PROJECT_NUMBER         = v0.1
+PROJECT_NUMBER         = v0.2.5
 PROJECT_BRIEF          = "Un planificateur de la ligne de production du Père Noel"
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       = ./doc
