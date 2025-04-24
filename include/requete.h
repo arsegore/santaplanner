@@ -231,7 +231,50 @@ table_resultat *requete_inscrire_dispo(sqlite3 *db, FILE *logs, int id_lutin, in
  */
 table_resultat *requete_supprimer_lutin(sqlite3 *db, FILE *logs, int id_lutin);
 
+/*!
+ * \fn int edt_est_vide(sqlite3 *db, FILE *logs);
+ * \brief Vérifie si l'EDT est vide
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier où écrire les logs
+ */
 int edt_est_vide(sqlite3 *db, FILE *logs);
+
+/*!
+ * \fn table_resultat *empaqueteurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau);
+ * \brief Renvoie la liste des empaqueteurs disponibles
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier où écrire les logs
+ * \param id_jour L'id d'un jour
+ * \param id_semaine L'id d'une semaine
+ * \param id_creneau L'id d'un creneau
+ */
+table_resultat *empaqueteurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau);
+
+/*!
+* \fn table_resultat *controleurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau);
+* \brief Renvoie la liste des controleurs disponibles
+*
+* \param db La bdd sur laquelle interagir
+* \param logs Le fichier où écrire les logs
+ * \param id_jour L'id d'un jour
+ * \param id_semaine L'id d'une semaine
+ * \param id_creneau L'id d'un creneau
+ */
+table_resultat *controleurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau);
+
+/*!
+ * \fn table_resultat *bricoleurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau);
+ * \brief Renvoie la liste des bricoleurs disponibles
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier où écrire les logs
+ * \param id_jour L'id d'un jour
+ * \param id_semaine L'id d'une semaine
+ * \param id_creneau L'id d'un creneau
+ */
+table_resultat *bricoleurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau);
 
 
 #endif /* REQUETE_H_*/

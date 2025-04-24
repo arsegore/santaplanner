@@ -3,7 +3,7 @@
 #include "../include/liste_chainee.h"
 #include "../include/types.h"
 #include "../include/var.h"
-
+#include "../include/alerte.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -100,6 +100,58 @@ void ouvrir_ligne(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_c
   return;
 }
 
+void ouvrir_ligne_2(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_creneau, int id_ligne){
+  table_resultat *emp_dispo, *bri_dispo, *cont_dispo, *t;
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  int i, id_dispo;
+
+  /* On recupere l'ensemble des lutins disponibles */
+  emp_dispo = empaqueteurs_dispo(db, logs, id_jour, id_semaine, id_creneau);
+  bri_dispo = bricoleurs_dispo(db, logs, id_jour, id_semaine, id_creneau);
+  cont_dispo = controleurs_dispo(db, logs, id_jour, id_semaine, id_creneau);
+  if (emp_dispo->nb_ligne == 1){
+    alerte_disponibilite("empaqueteur", id_jour, id_semaine, id_creneau);
+  }
+  if (bri_dispo->nb_ligne == 1){
+    alerte_disponibilite("bricoleur", id_jour, id_semaine, id_creneau);
+  }
+  if (cont_dispo->nb_ligne == 1){
+    alerte_disponibilite("controleur", id_jour, id_semaine, id_creneau);
+  }
+
+  /* On ouvre une ligne */
+  fichier_rq = fopen("data/ouvrir_ligne.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  for (i = 0; i < 3; i++){
+    compiler_requete(db, requete_txt, &rq, &lecture, logs);
+    if (i == 0){
+      id_dispo = atoi(emp_dispo->valeurs[0][0]);
+    } else if (i == 1){
+      id_dispo = atoi(bri_dispo->valeurs[0][0]);
+    } else {
+      id_dispo = atoi(cont_dispo->valeurs[0][0]);
+    }
+    sqlite3_bind_int(rq, 1, id_dispo);
+    sqlite3_bind_int(rq, 2, id_ligne);
+    t = executer_requete(rq, logs);
+    liberer_resultats(t);
+  }
+
+  /* On libere les tables de resultats utilisées */
+  liberer_resultats(emp_dispo);
+  liberer_resultats(bri_dispo);
+  liberer_resultats(cont_dispo);
+  fclose(fichier_rq);
+  free(requete_txt);
+  return;
+
+}
+
 int ligne_libre(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_creneau){
   FILE *fichier_rq;
   char *requete_txt;
@@ -134,7 +186,7 @@ void generer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour){
     if (nbl > 0){
       for (i = 0; i < nbl; i++){
         id_ligne = ligne_libre(db, logs, id_semaine, id_jour, id_creneau);
-        ouvrir_ligne(db, logs, id_semaine, id_jour, id_creneau, id_ligne);
+        ouvrir_ligne_2(db, logs, id_semaine, id_jour, id_creneau, id_ligne);
       }
     }
   }

@@ -404,5 +404,75 @@ int edt_est_vide(sqlite3 *db, FILE *logs){
   return 0;
 }
 
+table_resultat *empaqueteurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/empaqueteurs_dispo.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_jour);
+  sqlite3_bind_int(rq, 2, id_semaine);
+  sqlite3_bind_int(rq, 3, id_creneau);
+  t = executer_requete(rq, logs);
+  afficher_resultats(t);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+
+  return t;
+}
+
+table_resultat *bricoleurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/bricoleurs_dispo.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_jour);
+  sqlite3_bind_int(rq, 2, id_semaine);
+  sqlite3_bind_int(rq, 3, id_creneau);
+  t = executer_requete(rq, logs);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+
+  return t;
+}
+
+table_resultat *controleurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_semaine, int id_creneau){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/controleurs_dispo.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_jour);
+  sqlite3_bind_int(rq, 2, id_semaine);
+  sqlite3_bind_int(rq, 3, id_creneau);
+  t = executer_requete(rq, logs);
+
+  fclose(fichier_rq);
+  free(requete_txt);
+
+  return t;
+}
+
 
 

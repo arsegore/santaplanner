@@ -70,6 +70,7 @@
             buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
             gtk_widget_set_hexpand(textview, TRUE);
             gtk_widget_set_vexpand(textview, TRUE);
+            gtk_text_view_set_editable(GTK_TEXT_VIEW(textview), FALSE);
             gtk_widget_add_css_class(textview, "cellule-edt");
 
             l = e[i][j];
@@ -117,6 +118,12 @@ void mettre_a_jour_edt_ligne(GtkWidget *button, gpointer data) {
     int semaine, mois, annee, id_ligne;
     edt_wrp *nouvel_edt_wrp;
     GtkWidget *nouvel_edt_widget;
+ 
+    /* si un edt est déjà stocké dans appdata, on le libère avant de le mettre à jour*/
+    if (app_data->edt_tab){
+        g_free(app_data->edt_tab);
+        app_data->edt_tab = NULL;
+    }
 
     /* allocation de la structure contenant l'edt, pr ensuite pouvoir le transmettre sous forme de pointeur*/
     nouvel_edt_wrp = g_new0(edt_wrp, 1);
@@ -156,6 +163,12 @@ void mettre_a_jour_edt_lutin(GtkWidget *button, gpointer data) {
     int semaine, mois, annee, id_combo, id_lutin;
     edt_wrp *nouvel_edt_wrp;
     GtkWidget *nouvel_edt_widget;
+
+    /* si un edt est déjà stocké dans appdata, on le libère avant de le mettre à jour*/
+    if (app_data->edt_tab){
+        g_free(app_data->edt_tab);
+        app_data->edt_tab = NULL;
+    }
 
     /* allocation de la structure contenant l'edt, pr ensuite pouvoir le transmettre sous forme de pointeur*/
     nouvel_edt_wrp = g_new0(edt_wrp, 1);
@@ -511,7 +524,8 @@ void ajouter_dispo(GtkWidget *button, gpointer data) {
     ajouter_absence_ou_dispo(button, app_data_ltn, FALSE);
 }
 
-/* affiche le menu d'ajout d'absence/disponibilité (qui est une fentre pop up grossomodo)*/
+/* affiche le menu d'ajout d'absence/disponibilité (qui est une fenetre pop up grossomodo)*/
+/* A AJOUTER : WRAPPERS POUR APPELS DISTINCTS */
 void afficher_menu_ajouter_absence_ou_dispo(GtkWidget *button, gpointer data) {
     AppDataLtn *app_data_ltn_old = (AppDataLtn *)data; 
     gboolean est_absence = app_data_ltn_old->app_data->est_absence;
@@ -534,11 +548,9 @@ void afficher_menu_ajouter_absence_ou_dispo(GtkWidget *button, gpointer data) {
     app_data_ltn = g_new0(AppDataLtn, 1);
     
     fenetre_absence = gtk_window_new();
-    if (est_absence){
-        gtk_window_set_title(GTK_WINDOW(fenetre_absence), "Absence");
-    }else{
-        gtk_window_set_title(GTK_WINDOW(fenetre_absence), "Disponibilité");
-    }
+
+    gtk_window_set_title(GTK_WINDOW(fenetre_absence), "Choisissez un créneau");
+
     gtk_window_set_default_size(GTK_WINDOW(fenetre_absence), 550, 100);
     app_data_absence->fenetre = fenetre_absence;
 
@@ -605,6 +617,18 @@ void afficher_menu_ajouter_absence_ou_dispo(GtkWidget *button, gpointer data) {
     gtk_window_present(GTK_WINDOW(fenetre_absence));
 }
 
+void afficher_menu_ajt_absence(GtkWidget *button, gpointer data) {
+    AppDataLtn *app_data_ltn = (AppDataLtn *)data;
+    app_data_ltn->app_data->est_absence = TRUE;
+    afficher_menu_ajouter_absence_ou_dispo(button, app_data_ltn);
+}
+
+void afficher_menu_ajt_dispo(GtkWidget *button, gpointer data) {
+    AppDataLtn *app_data_ltn = (AppDataLtn *)data;
+    app_data_ltn->app_data->est_absence = FALSE;
+    afficher_menu_ajouter_absence_ou_dispo(button, app_data_ltn);
+}
+
 /* s'occupe de l'affichage de la grid contenant les lutins et les boutons pr interagir avec la bdd*/
 void afficher_grid_donnees(AppData *app_data){
     GtkWidget *grid_donnees;
@@ -636,12 +660,12 @@ void afficher_grid_donnees(AppData *app_data){
         /* bouton pr inserer une nouvelle absence à ce lutin */
         btn_inserer_absence = gtk_button_new_with_label("Déclarer une absence");
         g_object_set_data(G_OBJECT(btn_inserer_absence), "lutin_id", GINT_TO_POINTER(app_data_ltn->id_lutin));
-        g_signal_connect(btn_inserer_absence, "clicked", G_CALLBACK(afficher_menu_ajouter_absence_ou_dispo), app_data_ltn);
+        g_signal_connect(btn_inserer_absence, "clicked", G_CALLBACK(afficher_menu_ajt_absence), app_data_ltn);
 
         /* bouton pr inserer une nouvelle disponibilité à ce lutin */
         btn_inserer_dispo = gtk_button_new_with_label("Déclarer une disponibilité");
         g_object_set_data(G_OBJECT(btn_inserer_dispo), "lutin_id", GINT_TO_POINTER(app_data_ltn->id_lutin));
-        g_signal_connect(btn_inserer_dispo, "clicked", G_CALLBACK(afficher_menu_ajouter_absence_ou_dispo), app_data_ltn);
+        g_signal_connect(btn_inserer_dispo, "clicked", G_CALLBACK(afficher_menu_ajt_dispo), app_data_ltn);
 
         /* bouton pr supprimer ce lutin de la bdd */
         btn_supprimer_lutin = gtk_button_new_with_label("Supprimer");

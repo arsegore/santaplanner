@@ -7,7 +7,7 @@ SRC_DIR = src
 BIN_DIR = bin
 
 # sources et objets
-SRC_FILES = main.c var.c ui_gtk.c liste_chainee.c ui_term.c generation.c requete.c sqlite3.c export.c
+SRC_FILES = main.c var.c ui_gtk.c liste_chainee.c ui_term.c generation.c requete.c sqlite3.c export.c alerte.c
 OBJ_FILES = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
 # cibles
