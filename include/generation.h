@@ -83,6 +83,30 @@ int ligne_libre(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_cre
  */
 void generer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour);
 
+/*!
+ * \fn void nettoyer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour)
+ * \brief Supprime la planification d'une journée
+ *
+ * Retire chaque entrée concernant la journée donnée de la table travaille
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier de où écrire les logs
+ * \param id_semaine L'identifiant d'une semaine dans la base de données
+ * \param id_jour L'identifiant d'un jour dans la base de données (qui correspond en fait au numéro d'un jour dans la semaine)
+ */
+void nettoyer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour);
+
+/*!
+ * \fn generer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour)
+ * \brief Nettoie puis régénère la planification d'une journée
+ *
+ * \param db La bdd sur laquelle interagir
+ * \param logs Le fichier de où écrire les logs
+ * \param id_semaine L'identifiant d'une semaine dans la base de données
+ * \param id_jour L'identifiant d'un jour dans la base de données (qui correspond en fait au numéro d'un jour dans la semaine)
+ */
+void maj_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour);
+
 
 /*!
  * \fn void generer_edt_semaine(sqlite3 *db, FILE *logs, int id_semaine)

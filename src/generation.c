@@ -193,6 +193,33 @@ void generer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour){
   return;
 }
 
+void nettoyer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour){
+  FILE *fichier_rq;
+  char *requete_txt;
+  sqlite3_stmt *rq;
+  const char *lecture;
+  table_resultat *t;
+
+  fichier_rq = fopen("data/nettoyer_edt_jour.sql", "r");
+  if (fichier_rq == NULL) fprintf(stderr, "Erreur lecture requete\n");
+  requete_txt = charger_requete(fichier_rq);
+
+  compiler_requete(db, requete_txt, &rq, &lecture, logs);
+  sqlite3_bind_int(rq, 1, id_semaine);
+  sqlite3_bind_int(rq, 2, id_jour);
+  t = executer_requete(rq, logs);
+
+  liberer_resultats(t);
+  fclose(fichier_rq);
+  free(requete_txt);
+  return ;
+}
+
+void maj_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour){
+  nettoyer_edt_jour(db, logs, id_semaine, id_jour);
+  generer_edt_jour(db, logs, id_semaine, id_jour);
+}
+
 void generer_edt_semaine(sqlite3 *db, FILE *logs, int id_semaine){
   int id_jour;
 

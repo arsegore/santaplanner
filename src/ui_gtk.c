@@ -505,8 +505,8 @@ void ajouter_absence_ou_dispo(GtkWidget *button, gpointer data, gboolean est_abs
     }else{
         label_res = gtk_label_new("Echec de l'insertion.");
     }
-    maj_edt_semaine(db, logs, id_semaine);
-    printf("mise à jour de l'edt de la semaine %d, du mois %d, l'année %d...\n", semaine, mois, annee);
+    maj_edt_jour(db, logs, id_semaine, jour);
+    printf("mise à jour de l'edt du jour %d de la semaine %d, du mois %d, l'année %d...\n", jour, semaine, mois, annee);
     gtk_box_append(GTK_BOX(app_data->box_principale), label_res); 
 
     liberer_resultats(t);
