@@ -345,6 +345,8 @@ void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int numero
 
   return ;
 }
+
+
 /* PLANNING GLOBAL D'UNE LIGNE (affiche les lutins qui bossent dessus à un creneau donné */
 void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, int numero, int mois, int annee, int id_ligne){
   FILE *fichier_rq;

@@ -11,13 +11,12 @@ SRC_FILES = main.c var.c ui_gtk.c liste_chainee.c ui_term.c generation.c requete
 OBJ_FILES = $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
 
 # cibles
-.PHONY: all all_but_sqlite gtk_only build bin doc clean
+.PHONY: all all_but_sqlite build bin doc clean
 
 all: bin build santaplanner doc
 
 all_but_sqlite: build $(filter-out $(BUILD_DIR)/sqlite3.o, $(OBJ_FILES)) santaplanner doc
 
-gtk_only: build $(BUILD_DIR)/ui_gtk.o
 
 build:
 	mkdir -p $(BUILD_DIR)

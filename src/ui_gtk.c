@@ -766,6 +766,22 @@ GtkWidget *afficher_changelog(){
     return text_view;
 }
 
+GtkWidget *afficher_alertes(){
+    FILE *f_alertes;
+    GtkWidget *text_view;
+    char txt_buffer[2048] = "\0";
+    f_alertes = fopen("alertes.txt", "r");
+    if (f_alertes == NULL){
+        fprintf(stderr, "Impossible d'accéder aux alertes\n");
+    }
+    fread(txt_buffer, 1, 2048 - 1, f_alertes);
+    text_view = gtk_text_view_new();
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    gtk_text_buffer_set_text(buffer, txt_buffer, -1);
+    fclose(f_alertes);
+    return text_view;
+}
+
 /* ça ça s'occupe d'afficher le menu principal, donc en gros le squelette global de la fenetre*/
 void afficher_menu_principal(GtkWindow *fenetre) {
     AppData *app_data_lignes;
@@ -774,11 +790,13 @@ void afficher_menu_principal(GtkWindow *fenetre) {
     GtkWidget *stack;
     GtkWidget *stack_switcher;
     GtkWidget *changelog;
+    GtkWidget *alertes;
     GtkWidget *page_accueil;
     GtkWidget *label_bienvenue;
     GtkWidget *page_lignes;
     GtkWidget *page_lutins;
     GtkWidget *page_donnees;
+    GtkWidget *page_alertes;
     GtkWidget *container;
 
     /* on cree une stack (c en grooos une sorte de gestion d'onglets, ça me sert pr gerer les sous menus) */ 
@@ -824,6 +842,12 @@ void afficher_menu_principal(GtkWindow *fenetre) {
     afficher_menu_donnees(app_data_donnees);
     gtk_stack_add_titled(GTK_STACK(stack), page_donnees, "donnees", "Donnees");
 
+    /* creation de la page contenant les alertes */
+    page_alertes = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
+    alertes = afficher_alertes();
+    gtk_box_append(GTK_BOX(page_alertes), alertes);
+    gtk_stack_add_titled(GTK_STACK(stack), page_alertes, "alertes", "Alertes");
+    
     /* box dans laquelle l'ui est dessiné */
     container = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_box_append(GTK_BOX(container), stack_switcher);
