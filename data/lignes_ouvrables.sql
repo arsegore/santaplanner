@@ -1,12 +1,15 @@
-SELECT COUNT(DISTINCT specialite) FROM (
-	SELECT lutin.nom, lutin.specialite, semaine.numero, semaine.mois, semaine.annee, creneau.heure_debut, creneau.heure_fin
-	FROM disponibilite
-	JOIN lutin ON disponibilite.id_lutin = lutin.id
-	JOIN semaine ON disponibilite.id_semaine = semaine.id
-	JOIN jour ON disponibilite.id_jour = jour.id
-	JOIN creneau ON disponibilite.id_creneau = creneau.id
-	WHERE creneau.id = ?1
-    AND semaine.id = ?2
-    AND jour.id = ?3
-)
-;
+SELECT MIN(nb) AS nb_lignes
+FROM (
+    SELECT COUNT(*) AS nb FROM disponibilite
+    JOIN lutin ON disponibilite.id_lutin = lutin.id
+    WHERE disponibilite.id_creneau = ?1 AND disponibilite.id_semaine = ?2 AND disponibilite.id_jour = ?3 AND lutin.specialite = 'Bricoleur'
+    UNION ALL
+    SELECT COUNT(*) FROM disponibilite
+    JOIN lutin ON disponibilite.id_lutin = lutin.id
+    WHERE disponibilite.id_creneau = ?1 AND disponibilite.id_semaine = ?2 AND disponibilite.id_jour = ?3 AND lutin.specialite = 'Contrôleur'
+    UNION ALL
+    SELECT COUNT(*) FROM disponibilite
+    JOIN lutin ON disponibilite.id_lutin = lutin.id
+    WHERE disponibilite.id_creneau = ?1 AND disponibilite.id_semaine = ?2 AND disponibilite.id_jour = ?3 AND lutin.specialite = 'Empaqueteur'
+);
+

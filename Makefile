@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -W -Wall
-GTK_CFLAGS = `pkg-config --cflags gtk4`
+CFLAGS = 
+GTK_CFLAGS = `pkg-config --cflags gtk4` -DGDK_DISABLE_DEPRECATION_WARNINGS
 GTK_LFLAGS = `pkg-config --libs gtk4`
 BUILD_DIR = build
 SRC_DIR = src

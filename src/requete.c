@@ -420,7 +420,6 @@ table_resultat *empaqueteurs_dispo(sqlite3 *db, FILE *logs, int id_jour, int id_
   sqlite3_bind_int(rq, 2, id_semaine);
   sqlite3_bind_int(rq, 3, id_creneau);
   t = executer_requete(rq, logs);
-  afficher_resultats(t);
 
   fclose(fichier_rq);
   free(requete_txt);

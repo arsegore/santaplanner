@@ -2,6 +2,8 @@
 #include "../include/generation.h"
 #include "../include/var.h"
 #include "../include/requete.h"
+#include "../include/ui_gtk.h"
+#include "../include/export.h"
 
 /* globalement toutes les fonctions se ressemblent donc jv pas tout commenter : déclarations -> creation des objets de l'ui -> 
  * -> transmission dans app_data -> placement dans l'ui */
@@ -29,11 +31,11 @@
     };
 
     GtkCssProvider *css_provider = gtk_css_provider_new();
-    gtk_css_provider_load_from_data(css_provider,
-        ".cellule-edt { border: 1px solid black; padding: 10px; font-size: 16px; font-weight: bold; text-align: center; background-color: #f9f9f9; }"
+    gtk_css_provider_load_from_string(css_provider,
+        ".cellule-edt { border: 1px solid black; padding: 10px; font-size: 16px; font-weight: bold; background-color: #f9f9f9; }"
         ".cellule-edt-plein { background-color: #d1f7d1; }"
         ".cellule-edt-vide { background-color: #f7d1d1; }"
-        ".titre-jour, .titre-horaire { font-weight: bold; background-color: #eeeeee; padding: 6px; border: 1px solid #ccc; }", -1);
+        ".titre-jour, .titre-horaire { font-weight: bold; background-color: #eeeeee; padding: 6px; border: 1px solid #ccc; }");
     gtk_style_context_add_provider_for_display(
         gdk_display_get_default(),
         GTK_STYLE_PROVIDER(css_provider),
@@ -58,7 +60,7 @@
     /* puis la premiere colonne : contient les créneaux*/
     for (i = 0; i < 14; i++) {
         label = gtk_label_new(horaires[i]);
-        gtk_widget_add_css_class(label, "titre-horaire");
+        gtk_widget_add_css_class(GTK_WIDGET(label), "titre-horaire");
         gtk_grid_attach(GTK_GRID(grid), label, 0, i + 1, 1, 1);
     }
 
@@ -243,9 +245,9 @@ void fichier_export_choisi(GObject *source, GAsyncResult *res, gpointer user_dat
 
     /* on exporte l'edt dans un .ics*/
     if (app_data->est_edt_lutin){
-        exporter_edt_lutin_en_ical(e_wrp, chemin, semaine, mois, annee);
+        exporter_edt_lutin_en_ical(e_wrp->edt_tab, chemin, semaine, mois, annee);
     }else{
-        exporter_edt_lutin_en_ical(e_wrp, chemin, semaine, mois, annee);
+        exporter_edt_lutin_en_ical(e_wrp->edt_tab, chemin, semaine, mois, annee);
     }
 
     /* liberation des objets gtk crées */
@@ -766,20 +768,65 @@ GtkWidget *afficher_changelog(){
     return text_view;
 }
 
-GtkWidget *afficher_alertes(){
+/* affiche les alertes depuis le fichier alertes.txt, version clean avec allocation dynamique */
+void *afficher_alertes(AppData *app_data_alertes) {
     FILE *f_alertes;
     GtkWidget *text_view;
-    char txt_buffer[2048] = "\0";
+    GtkWidget *scrolled_window;
+    GtkTextBuffer *buffer;
+    char *txt_buffer;
+    long taille_fichier;
+
+    
+
     f_alertes = fopen("alertes.txt", "r");
-    if (f_alertes == NULL){
-        fprintf(stderr, "Impossible d'accéder aux alertes\n");
+    if (f_alertes == NULL) {
+        fprintf(stderr, "Impossible d'accéder au fichier alertes.txt\n");
+        return NULL;
     }
-    fread(txt_buffer, 1, 2048 - 1, f_alertes);
-    text_view = gtk_text_view_new();
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-    gtk_text_buffer_set_text(buffer, txt_buffer, -1);
+
+    fseek(f_alertes, 0, SEEK_END);
+    taille_fichier = ftell(f_alertes);
+    rewind(f_alertes);
+
+    txt_buffer = (char *)malloc(taille_fichier + 1);
+    if (txt_buffer == NULL) {
+        fprintf(stderr, "Erreur d'allocation mémoire pour le buffer des alertes\n");
+        fclose(f_alertes);
+        return NULL;
+    }
+
+    fread(txt_buffer, 1, taille_fichier, f_alertes);
+    txt_buffer[taille_fichier] = '\0';
+
     fclose(f_alertes);
-    return text_view;
+
+    text_view = gtk_text_view_new();
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    gtk_text_buffer_set_text(buffer, txt_buffer, -1);
+
+    free(txt_buffer);
+
+    scrolled_window = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(scrolled_window), 900);
+    gtk_widget_set_vexpand(scrolled_window, TRUE);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), text_view);
+
+    gtk_box_append(GTK_BOX(app_data_alertes->box_principale), scrolled_window);
+
+}
+
+/* fonction appelée periodiquement pour mettre à jour l'onglet des alertes*/
+gboolean rafraichir_alertes(gpointer data) {
+    AppData *app_data_alertes = (AppData *)data;
+    GtkWidget *child;
+    child = gtk_widget_get_first_child(app_data_alertes->box_principale);
+    while (child != NULL) {
+        gtk_box_remove(GTK_BOX(app_data_alertes->box_principale), child);
+        child = gtk_widget_get_first_child(app_data_alertes->box_principale);
+    }
+    afficher_alertes(app_data_alertes);
+    return G_SOURCE_CONTINUE;
 }
 
 /* ça ça s'occupe d'afficher le menu principal, donc en gros le squelette global de la fenetre*/
@@ -787,6 +834,7 @@ void afficher_menu_principal(GtkWindow *fenetre) {
     AppData *app_data_lignes;
     AppData *app_data_lutins;
     AppData *app_data_donnees;
+    AppData *app_data_alertes;
     GtkWidget *stack;
     GtkWidget *stack_switcher;
     GtkWidget *changelog;
@@ -844,9 +892,14 @@ void afficher_menu_principal(GtkWindow *fenetre) {
 
     /* creation de la page contenant les alertes */
     page_alertes = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
-    alertes = afficher_alertes();
+    app_data_alertes = g_new0(AppData, 1);
+    app_data_alertes->fenetre = fenetre;
+    alertes = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
     gtk_box_append(GTK_BOX(page_alertes), alertes);
+    app_data_alertes->box_principale = alertes;
     gtk_stack_add_titled(GTK_STACK(stack), page_alertes, "alertes", "Alertes");
+    /* démarrer le rafraîchissement automatique toutes les 5 secondes */
+    g_timeout_add(5000, rafraichir_alertes, app_data_alertes);
     
     /* box dans laquelle l'ui est dessiné */
     container = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);

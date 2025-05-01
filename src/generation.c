@@ -24,10 +24,7 @@ int semaine2id(sqlite3 *db, FILE *logs, int num_semaine, int mois, int annee){
   sqlite3_bind_int(rq, 2, mois);
   sqlite3_bind_int(rq, 3, annee);
   t = executer_requete(rq, logs);
-  afficher_resultats(t);
   res = atoi(t->valeurs[0][0]);
-
-  printf("id_semaine = %d\n", res);
 
   liberer_resultats(t);
   fclose(fichier_rq);
@@ -57,7 +54,7 @@ int nb_lignes_ouvrables(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, in
   liberer_resultats(t);
   fclose(fichier_rq);
   free(requete_txt);
-  return res / 3;
+  return res;
 }
 
 void ouvrir_ligne(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_creneau, int id_ligne){
@@ -333,7 +330,6 @@ void creation_table_edt_ligne_semaine(sqlite3 *db, FILE *logs, edt e, int numero
   sqlite3_bind_int(rq, 2, mois);
   sqlite3_bind_int(rq, 3, annee);
   t = executer_requete(rq, logs);
-  afficher_resultats(t);
 
   init_edt(e); /* Un edt est une matrice de listes */ 
   /* Premiere colonne : les id_creneau 
@@ -366,7 +362,6 @@ void creation_table_edt_ligne_semaine_avec_id(sqlite3 *db, FILE *logs, edt e, in
   sqlite3_bind_int(rq, 3, annee);
   sqlite3_bind_int(rq, 4, id_ligne);
   t = executer_requete(rq, logs);
-  afficher_resultats(t);
 
   init_edt(e); /* Un edt est une matrice de listes */ 
   /* Premiere colonne : les id_creneau 
@@ -398,7 +393,6 @@ void creation_table_edt_lutin_semaine(sqlite3 *db, FILE *logs, edt e, int numero
   sqlite3_bind_int(rq, 3, annee);
   sqlite3_bind_int(rq, 4, id_lutin);
   t = executer_requete(rq, logs);
-  afficher_resultats(t);
 
   init_edt(e);
   for (i = 0; i < t->nb_ligne; i++){
@@ -425,8 +419,6 @@ void remplir_liste_lutins(){
   compiler_requete(db, requete_txt, &rq, &lecture, logs);
   t = executer_requete(rq, logs);
   nb_lutins = t->nb_ligne;
-  afficher_resultats(t);
-  printf("nb lutins = %d\n", nb_lutins);
 
   liste_lutins = (lutin *) malloc(nb_lutins * sizeof(lutin)); 
   if (liste_lutins == NULL){
