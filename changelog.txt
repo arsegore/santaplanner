@@ -1,19 +1,12 @@
 ----------- CHANGELOG ------------
 
-Santaplanner - V0.2
-+ Interface graphique fonctionnelle : 
-	+ 4 onglets principaux 
-	+ Affichage de l'emploi du temps global de la production...
-	+ Ou d'une ligne en particulier...
-	+ Ou d'un lutin
-	+ Ajout de nouveaux lutins dans la BDD / supression 
-	+ Insertion d'absence 
-	+ Regénération automatique après modifications 
+Santaplanner - V0.3
+	+ Ajout d'un systèmes d'alertes 
+		- Nouvel onglet "Alertes"
+		- Détaille pourquoi il n'est pas possible d'ouvrir une ligne à tel créneau.
+	+ Ajout de l'export d'emploi du temps 
+		- Après avoir généré un EDT, cliquez sur "Exporter" pour l'exporter au format .ics !
+	+ Quelques bugfix et optimisation par rapport à la V0.2
 
-+ Affichage optimisé par rapport à la v0.1 : 
-	+ Les emplois du temps sont désormais de vrais tableaux
-	+ Les créneaux vides apparaissent donc, à la place d'une simple liste des créneaux remplis
-	+ Possibilité de basculer facilement entre les lignes/lutins 
-	+ Pour l'EDT global, les numéros de ligne sont affichés
-	+ Pour l'EDT d'UNE ligne, les lutins travaillant dessus sont affichés
+
 

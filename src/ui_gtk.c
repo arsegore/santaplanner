@@ -657,7 +657,6 @@ void afficher_grid_donnees(AppData *app_data){
         app_data_ltn = g_new0(AppDataLtn, 1);
         app_data_ltn->app_data = app_data;
         app_data_ltn->id_lutin = liste_lutins[i].id;
-        printf("app_data_ltn->id_lutin = %d\n", app_data_ltn->id_lutin);
 
         /* bouton pr inserer une nouvelle absence à ce lutin */
         btn_inserer_absence = gtk_button_new_with_label("Déclarer une absence");

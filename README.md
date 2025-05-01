@@ -1,7 +1,36 @@
-# santaplanner
-Logiciel permettant l'automatisation de la planification de la chaîne de production des jouets, en fonction des horaires des lutins.
+# Santaplanner
 
-*Capture d'écran de la v0.1*
-![image](https://github.com/user-attachments/assets/96bf9c94-7d92-4cdf-a5ee-027ef4612037)
+**Santaplaner** est un logiciel gérant la planification des lignes de production du père Noël. Il est possible de créer les emplois du temps pour les lignes, mais aussi pour chaque lutin individuellement ! Exportez les au format .ics pour ensuite les ajouter à votre agenda Google Calendar ! 
+De plus, vous pouvez directement inscrire de nouveaux lutins dans l'équipe et gérer leurs créneaux de disponibilité dans le logiciel ! 
+
+
+# Installation 
+
+- Télécharger le code source 
+- Installer la version dev de GTK4 (lib graphique) : 
+    - Sur un système Ubuntu, tapez simplement : 
+`$ sudo apt install libgtk-4-dev`
+- Compilez le logiciel : dans le répertoire principal, tapez : 
+`$ make`
+
+*NB: Il est normal que la compilation prenne du temps (à cause de SQLite) et génère quelques warnings (à cause de prototypes de fonctions forcés par la lib)*
+
+# Utilisation
+
+Le logiciel se divise en 5 onglets : 
+- Accueil 
+    - Contient notamment les notes de mise à jour 
+- Lignes 
+    - Permet de générer et exporter les emplois du temps des lignes (individuelles ou bien toutes les lignes). 
+    - Si toutes les lignes sont sélectionnées, une cellule de l'emploi du temps contient les numéros de lignes ouvertes 
+    - Si une ligne spécifique est choisie, une cellule contient les lutins travaillant dessus
+- Lutins 
+    - Permet de générer et exporter les emplois des lutins individuellement
+- Données 
+    - Permet d'ajouter/supprimer des lutins de l'équipe
+    - Ajouter une disponibilité ou une absence à un lutin a pour effet de régénérer la planification de la journée concernée
+- Alertes 
+    - Affiche le fichier alertes.txt qui contient la liste de toutes les alertes déclenchées lors des générations. Ce fichier ne sert que de logs pour les alertes, il n'y a donc pas de problème à ce que l'utilisateur l'ouvre de son côté et le modifie (après avoir réglé un conflit par exemple)
+
 
 
