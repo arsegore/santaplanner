@@ -104,6 +104,7 @@ void ouvrir_ligne_2(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id
   sqlite3_stmt *rq;
   const char *lecture;
   int i, id_dispo;
+  
 
   /* On recupere l'ensemble des lutins disponibles */
   emp_dispo = empaqueteurs_dispo(db, logs, id_jour, id_semaine, id_creneau);
@@ -177,6 +178,8 @@ int ligne_libre(sqlite3 *db, FILE *logs, int id_semaine, int id_jour, int id_cre
 
 void generer_edt_jour(sqlite3 *db, FILE *logs, int id_semaine, int id_jour){
   int id_creneau, nbl, i, id_ligne;
+
+  nettoyer_alertes();
 
   for (id_creneau = 1; id_creneau < 15; id_creneau++){
     nbl = nb_lignes_ouvrables(db, logs, id_semaine, id_jour, id_creneau);

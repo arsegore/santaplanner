@@ -6,6 +6,13 @@
 #include "../include/generation.h"
 #include "../include/requete.h"
 
+/*! 
+ * \file ui_gtk.h
+ * 
+ * \brief Fichier d'en-tête des fonctions de l'UI GTK
+ */
+
+
 /**
  * @brief Crée le widget contenant l'edt.
  */
