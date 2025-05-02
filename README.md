@@ -9,9 +9,13 @@ De plus, vous pouvez directement inscrire de nouveaux lutins dans l'équipe et g
 - Télécharger le code source 
 - Installer la version dev de GTK4 (lib graphique) : 
     - Sur un système Ubuntu, tapez simplement : 
-`$ sudo apt install libgtk-4-dev`
-- Compilez le logiciel : dans le répertoire principal, tapez : 
+    `$ sudo apt install libgtk-4-dev`
+- Installer Doxygen :
+    - Sur un système Ubuntu : 
+    `$ sudo apt install Doxygen`
+- Compiler le logiciel : dans le répertoire principal, tapez : 
 `$ make`
+- Lancer Santaplanner : depuis le répertoire santaplanner : `$ bin/santaplanner`
 
 *NB: Il est normal que la compilation prenne du temps (à cause de SQLite) et génère quelques warnings (à cause de prototypes de fonctions forcés par la lib)*
 
@@ -30,7 +34,7 @@ Le logiciel se divise en 5 onglets :
     - Permet d'ajouter/supprimer des lutins de l'équipe
     - Ajouter une disponibilité ou une absence à un lutin a pour effet de régénérer la planification de la journée concernée
 - Alertes 
-    - Affiche le fichier alertes.txt qui contient la liste de toutes les alertes déclenchées lors des générations. Ce fichier ne sert que de logs pour les alertes, il n'y a donc pas de problème à ce que l'utilisateur l'ouvre de son côté et le modifie (après avoir réglé un conflit par exemple)
+    - Affiche le contneu du fichier alertes.txt qui contient la liste de toutes les alertes déclenchées lors des générations. Le buffer se met à jour toutes les 5 secondes. Ce fichier ne sert que de logs pour les alertes, il n'y a donc pas de problème à ce que l'utilisateur l'ouvre de son côté et le modifie (après avoir réglé un conflit par exemple)
 
 
 
